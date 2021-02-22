@@ -228,5 +228,23 @@ class OrderController extends BaseController
 
     }
 
+    public function actionReturnback($id)
+    {
+        $order = Order::findOne($id);
+
+        if ( empty($order) ) {
+            Yii::$app->response->statusCode = 422;
+            return ['message' => 'Заявка не существует'];
+        }
+
+        $order->status = Order::STATUS_RETURNED;
+
+        if ( $order->save() ) {
+            return ['message' => 'Успешно'];
+        }
+
+        return $order->getErrors();
+    }
+
 
 }

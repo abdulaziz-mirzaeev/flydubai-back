@@ -1,4 +1,5 @@
 <?php
+
 namespace backend\controllers;
 
 use common\models\User;
@@ -20,40 +21,42 @@ class UserController extends BaseController
         return $verbs;
     }
 
-    public function actions(){
+    public function actions()
+    {
         $action = parent::actions();
         //d($action,1);
         unset($action['update']);
         return $action;
     }
 
-    public function actionUpdate($id){
+    public function actionUpdate($id)
+    {
         $errors = [];
-        if($user = User::findOne($id)) {
+        if ($user = User::findOne($id)) {
             $post = Yii::$app->request->post();
-
             $user->username = $post['username'];
             $user->email = $post['email'];
-            if($user->save()){
-                return ['status'=>1];
+            if ($user->save()) {
+                return ['status' => 1];
             }
             $errors[] = $user->getErrors();
 
-        }else{
+        } else {
             $errors[] = 'Пользователь не найден!';
         }
-        return ['status'=>0,'errors'=>$errors];
+        return ['status' => 0, 'errors' => $errors];
 
 
     }
 
 
     // поиск по токену
-    function actionGet(){
+    function actionGet()
+    {
 
         $post = Yii::$app->request->post();
 
-        return User::find()->where(['token'=>$post['token']])->one();
+        return User::find()->where(['token' => $post['token']])->one();
     }
 
 }

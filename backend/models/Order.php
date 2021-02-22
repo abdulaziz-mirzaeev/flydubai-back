@@ -73,19 +73,19 @@ class Order extends \backend\models\BaseModel
 
     //public $consts = ['asd','asdd'];
 
-    const STATUS_NEW = 'NEW';      // новая
-    const STATUS_PROCESS = 'PROCESS';  // в обработке
-    const STATUS_BOOKED = 'BOOKED';  // бронирован
-    const STATUS_PAID = 'PAID';     // оплачено
-    const STATUS_CANCEL = 'CANCEL';   // отменено
-    const STATUS_RETURNED = 'RETURNED';   // возврат ВДС
-    const STATUS_DELETED = 'DELETED';   // удален
+    const STATUS_NEW = 'NEW';
+    const STATUS_PROCESS = 'PROCESS';      // новая
+    const STATUS_BOOKED = 'BOOKED';  // в обработке
+    const STATUS_PAID = 'PAID';  // бронирован
+    const STATUS_CANCEL = 'CANCEL';     // оплачено
+    const STATUS_RETURNED = 'RETURNED';   // отменено
+    const STATUS_DELETED = 'DELETED';   // возврат ВДС
+    const TYPE_TICKET = 'ticket';   // удален
 
     // тип
-    const TYPE_TICKET = 'ticket';  // билет
-    const TYPE_VISA = 'visa'; // виза
-    const TYPE_TOUR = 'tour_package'; // турпакет
-    const TYPE_CARGO = 'cargo'; // Cargo - грузы
+    const TYPE_VISA = 'visa';  // билет
+    const TYPE_TOUR = 'tour_package'; // виза
+    const TYPE_CARGO = 'cargo'; // турпакет
     public const order_statuses = [
         self::STATUS_NEW => 'НОВАЯ',
         self::STATUS_PROCESS => 'В ОБРАБОТКЕ',
@@ -94,7 +94,7 @@ class Order extends \backend\models\BaseModel
         self::STATUS_CANCEL => 'ОТМЕНЕНО',
         self::STATUS_RETURNED => 'ВДС',
         self::STATUS_DELETED => 'УДАЛЕН',
-    ];
+    ]; // Cargo - грузы
     public const order_types = [
         self::TYPE_TICKET => 'БИЛЕТ',
         self::TYPE_VISA => 'ВИЗА',
@@ -114,6 +114,22 @@ class Order extends \backend\models\BaseModel
     public static function tableName()
     {
         return 'order';
+    }
+
+    public function beforeSave($insert)
+    {
+        if ( parent::beforeSave($insert) ) {
+
+            if ( $this->isNewRecord ) {
+                $operator_id = Operator::findOne(['user_id' => Yii::$app->user->identity->id])->id;
+                $this->operator_id = $operator_id;
+            }
+
+            return true;
+
+        }
+
+        return false;
     }
 
     /**
