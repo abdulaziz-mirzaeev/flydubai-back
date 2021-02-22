@@ -6,6 +6,7 @@
     <br>
 </p>
 
+
 Yii 2 Advanced Project Template is a skeleton [Yii 2](http://www.yiiframework.com/) application best for
 developing complex Web applications with multiple tiers.
 
@@ -57,4 +58,11 @@ frontend
     widgets/             contains frontend widgets
 vendor/                  contains dependent 3rd-party packages
 environments/            contains environment-based overrides
+```
+
+
+MIGRATION
+---------
+```
+yii migrate
 ```
