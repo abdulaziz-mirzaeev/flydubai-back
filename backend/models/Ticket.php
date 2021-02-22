@@ -34,10 +34,13 @@ use Yii;
  * @property Order order
  * @property Ticket parent
  * @property Ticket child
+ * @property float|null $commission Комиссия
  */
 class Ticket extends \backend\models\BaseModel
 {
     use BaseModelTrait;
+
+    protected $_commission;
 
     /**
      * {@inheritdoc}
@@ -50,7 +53,7 @@ class Ticket extends \backend\models\BaseModel
     public function afterSave($insert, $changedAttributes)
     {
         parent::afterSave($insert, $changedAttributes);
-        if ($insert) {
+        if ( $insert ) {
             $order = new Order();
             $order->type = 'ticket';
             $order->type_id = $this->id;
@@ -100,18 +103,19 @@ class Ticket extends \backend\models\BaseModel
             'id' => 'ID',
             'flight_number' => 'Номер рейса',
             'parent_id' => 'Билет туда/обратно',
-            'flight_route' => 'Направление рейса',
-            'cost_price' => 'Себестоимость визы',
-            'sell_price' => 'Цена ',
-            'tariff_id' => 'Тариф',
-            'tariff_type_id' => 'Тип тарифа',
-            'pnr' => 'ID (prn) билета',
+            'flight_route' => 'Направление',
+            'cost_price' => 'Себестоимость',
+            'sell_price' => 'Цена реализации',
+            'commission' => 'Комиссия',
+            'tariff_id' => 'Класс Бронирования',
+            'tariff_type' => 'Тип тарифа',
+            'pnr' => 'PNR',
             'client_id' => 'Клиент',
-            'passenger_count' => 'Пассажиров',
-            'comment' => 'Комментарий',
+            'passenger_count' => 'Количество пассажиров',
+            'comment' => 'Комментарии',
             'flight_date' => 'Дата вылета',
             'payment_at' => 'Дата оплаты',
-            'created_at' => 'Дата создания',
+            'created_at' => 'Дата выписки',
             'modified_at' => 'Дата изменения',
             'created_by' => 'Создал',
             'modified_by' => 'Изменил',
@@ -120,7 +124,7 @@ class Ticket extends \backend\models\BaseModel
 
     public function extraFields()
     {
-        return ['client', 'order', 'child', 'parent'];
+        return ['client', 'order', 'child', 'parent', 'commission'];
     }
 
     /**
@@ -171,5 +175,15 @@ class Ticket extends \backend\models\BaseModel
     public function getChild()
     {
         return $this->hasOne(Ticket::class, ['parent_id' => 'id']);
+    }
+
+    public function getCommission()
+    {
+        $this->setCommission($this->cost_price, $this->sell_price);
+    }
+
+    public function setCommission($costPrice, $sellPrice)
+    {
+        $this->_commission = $sellPrice - $costPrice;
     }
 }

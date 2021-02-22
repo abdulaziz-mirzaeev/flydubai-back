@@ -11,11 +11,14 @@ use Yii;
  * @property int $id
  * @property float $summ Сумма
  * @property float $summ_terminal Сумма с терминала
+ * @property float $nds НДС
+ * @property string $cheque_number Номер чека
  * @property int|null $cashier_from Касса откуда
  * @property int $cashier_id Касса куда
  * @property int|null $order_id Заказ
  * @property int $process_type Тип процесса
  * @property int $payment_type Тип процесса
+ * @property int $terminal_id Терминал
  * @property int|null $status_director Статус директора
  * @property int|null $status Статус вывода
  * @property string|null $comment Комментарий
@@ -27,7 +30,6 @@ use Yii;
  * @property Cashier $cashier
  * @property Order $order
  */
-
 class Process extends \backend\models\BaseModel
 {
     use BaseModelTrait;
@@ -46,22 +48,6 @@ class Process extends \backend\models\BaseModel
 
     const DIRECTOR_CONFIRM_TRUE = 1;
     const DIRECTOR_CONFIRM_FALSE = 0;
-
-    public static $payment_types = [
-        'CASH', // => 'НАЛИЧНЫЕ',
-        'TERMINAL', // => 'ТЕРМИНАЛ',
-        'TRANSFER', // => 'ВАЛЮТА',
-        'VALUTE', // => 'ПЕРЕЧИСЛЕНИЕ',
-        'CASH_TERMINAL' // => 'СМЕШАННЫЙ'
-    ];
-
-    public static $types = [
-        'TICKET',
-        'VISA',
-        'CARGO',
-        'TOUR_PACKAGE',
-    ];
-
     public const paymentType = [
         self::PAYMENT_TYPE_CASH => 'НАЛИЧНЫЕ',
         self::PAYMENT_TYPE_TERMINAL => 'ТЕРМИНАЛ',
@@ -69,15 +55,25 @@ class Process extends \backend\models\BaseModel
         self::PAYMENT_TYPE_TRANSFER => 'ПЕРЕЧИСЛЕНИЕ',
         self::PAYMENT_TYPE_CASH_TERMINAL => 'СМЕШАННЫЙ'
     ];
-
     public const processType = [
         self::TYPE_ENTER => 'ПРИХОД',
         self::TYPE_EXIT => 'РАСХОД',
         self::TYPE_TRANSFER => 'ПЕРЕМЕЩЕНИЕ',
         self::TYPE_RETURNED => 'ВДС',
     ];
-
-
+    public static $payment_types = [
+        'CASH', // => 'НАЛИЧНЫЕ',
+        'TERMINAL', // => 'ТЕРМИНАЛ',
+        'TRANSFER', // => 'ВАЛЮТА',
+        'VALUTE', // => 'ПЕРЕЧИСЛЕНИЕ',
+        'CASH_TERMINAL' // => 'СМЕШАННЫЙ'
+    ];
+    public static $types = [
+        'TICKET',
+        'VISA',
+        'CARGO',
+        'TOUR_PACKAGE',
+    ];
 
     /**
      * {@inheritdoc}
@@ -90,7 +86,7 @@ class Process extends \backend\models\BaseModel
     // связанные данные  ?expand=order,operator
     public function extraFields()
     {
-        return ['order','cashier','cashierFrom',''];
+        return ['order', 'cashier', 'cashierFrom', ''];
     }
 
 
@@ -100,13 +96,14 @@ class Process extends \backend\models\BaseModel
     public function rules()
     {
         return [
-            [['summ', 'cashier_id'], 'required'],
+            [['cashier_id', 'process_type'], 'required'],
             [['summ'], 'number'],
-            [['cashier_from', 'cashier_id', 'order_id',  'status_director', 'status', 'created_by','modified_by'], 'integer'],
-            [['comment', 'process_type','payment_type'], 'string'],
-            [['created_at','modified_at'], 'safe'],
+            [['cashier_from', 'terminal_id', 'cashier_id', 'order_id', 'status_director', 'status', 'created_by', 'modified_by'], 'integer'],
+            [['comment', 'process_type', 'payment_type'], 'string'],
+            [['created_at', 'modified_at'], 'safe'],
             [['cashier_id'], 'exist', 'skipOnError' => true, 'targetClass' => Cashier::className(), 'targetAttribute' => ['cashier_id' => 'id']],
             [['order_id'], 'exist', 'skipOnError' => true, 'targetClass' => Order::className(), 'targetAttribute' => ['order_id' => 'id']],
+            [['terminal_id'], 'exist', 'skipOnError' => true, 'targetClass' => Terminal::class, 'targetAttribute' => ['terminal_id' => 'id']],
         ];
     }
 
@@ -118,11 +115,15 @@ class Process extends \backend\models\BaseModel
         return [
             'id' => 'ID',
             'summ' => 'Сумма',
+            'summ_terminal' => 'Сумма терминала',
+            'cheque_number' => 'Номер чека',
             'cashier_from' => 'Касса откуда',
             'cashier_id' => 'Касса куда',
             'order_id' => 'Заказ',
+            'nds' => 'НДС',
             'process_type' => 'Тип процесса',
             'payment_type' => 'Тип оплаты',
+            'terminal_id' => 'Терминал',
             'status_director' => 'Статус директора',
             'status' => 'Статус вывода',
             'comment' => 'Комментарий',

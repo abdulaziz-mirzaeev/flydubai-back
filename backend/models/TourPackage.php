@@ -49,7 +49,7 @@ class TourPackage extends \backend\models\BaseModel
             [['tour_operator_id', 'tour_id', 'tour_partner_id', 'client_id', 'created_by', 'modified_by'], 'integer'],
             [['cost_price', 'sell_price'], 'number'],
             [['comment'], 'string'],
-            [['created_at', 'modified_at','payment_at'], 'safe'],
+            [['created_at', 'modified_at', 'payment_at'], 'safe'],
             [['client_id'], 'exist', 'skipOnError' => true, 'targetClass' => Client::className(), 'targetAttribute' => ['client_id' => 'id']],
             [['tour_id'], 'exist', 'skipOnError' => true, 'targetClass' => Tour::className(), 'targetAttribute' => ['tour_id' => 'id']],
             [['tour_operator_id'], 'exist', 'skipOnError' => true, 'targetClass' => TourOperator::className(), 'targetAttribute' => ['tour_operator_id' => 'id']],
@@ -69,9 +69,9 @@ class TourPackage extends \backend\models\BaseModel
             'tour_id' => 'Тур',
             'tour_partner_id' => 'Партнер по турпакетам',
             'client_id' => 'Клиент',
-            'cost_price' => 'Себестоимость визы',
-            'sell_price' => 'Цена',
-            'comment' => 'Комментарий',
+            'cost_price' => 'Себестоимость',
+            'sell_price' => 'Цена Реализации',
+            'comment' => 'Комментарии',
             'payment_at' => 'Дата оплаты',
             'created_at' => 'Дата создания',
             'modified_at' => 'Дата изменения',
@@ -124,6 +124,7 @@ class TourPackage extends \backend\models\BaseModel
     {
         return $this->hasOne(TourPartner::className(), ['id' => 'tour_partner_id']);
     }
+
     public function getOrder()
     {
         return $this->hasOne(Order::className(), ['type_id' => 'id'])->where(['type' => Order::TYPE_TOUR]);

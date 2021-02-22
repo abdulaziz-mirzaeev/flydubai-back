@@ -16,14 +16,17 @@ use Yii;
  * @property int|null $type Тип
  * @property int|null $type_id id билет, виза,
  * @property int|null $operator_id оператор
+ * @property int|null $terminal_id Терминал
  * @property int|null $cashier_id Касса
  * @property int|null $currency_id Тип валюты
  * @property float|null $currency Курс
+ * @property float|null $cheque_number Номер чека
  * @property float|null $converted Сумма по курсу
  * @property int|null $payment_type Тип оплаты
  * @property int|null $payment_type_add Дополнительный тип оплаты
  * @property int|null $status Статус
  * @property string|null $created_at Дата создания
+ * @property string|null $payment_at Дата создания
  * @property string|null $modified_at Дата изменения
  * @property int|null $created_by Создал
  * @property int|null $modified_by Изменил
@@ -41,33 +44,32 @@ class Order extends \backend\models\BaseModel
     use BaseModelTrait;
 
 
-
     // статусы заявки - заказа
-   /* const status_process = [
-        'new',
-        'process',
-        'booking',
-        'paid',
-        'cancel',
-        'return'
-    ];
+    /* const status_process = [
+         'new',
+         'process',
+         'booking',
+         'paid',
+         'cancel',
+         'return'
+     ];
 
-    // тип
-    const type = [
-        'ticket',
-        'visa',
-        'tour',
-        'cargo'
-    ];
+     // тип
+     const type = [
+         'ticket',
+         'visa',
+         'tour',
+         'cargo'
+     ];
 
-    // тип оплаты
-    const payment_type = [
-        'cash',
-        'terminal',
-        'valute',
-        'transfer',
-        'cash_terminal'
-    ];*/
+     // тип оплаты
+     const payment_type = [
+         'cash',
+         'terminal',
+         'valute',
+         'transfer',
+         'cash_terminal'
+     ];*/
 
     //public $consts = ['asd','asdd'];
 
@@ -84,14 +86,6 @@ class Order extends \backend\models\BaseModel
     const TYPE_VISA = 'visa'; // виза
     const TYPE_TOUR = 'tour_package'; // турпакет
     const TYPE_CARGO = 'cargo'; // Cargo - грузы
-
-    public $modelNames = [
-        'ticket' => 'Ticket',
-        'tour_package' => 'TourPackage',
-        'visa' => 'Visa',
-        'cargo' => 'Cargo'
-    ];
-
     public const order_statuses = [
         self::STATUS_NEW => 'НОВАЯ',
         self::STATUS_PROCESS => 'В ОБРАБОТКЕ',
@@ -101,12 +95,17 @@ class Order extends \backend\models\BaseModel
         self::STATUS_RETURNED => 'ВДС',
         self::STATUS_DELETED => 'УДАЛЕН',
     ];
-
     public const order_types = [
         self::TYPE_TICKET => 'БИЛЕТ',
         self::TYPE_VISA => 'ВИЗА',
         self::TYPE_TOUR => 'ТУРПАКЕТ',
         self::TYPE_CARGO => 'КАРГО',
+    ];
+    public $modelNames = [
+        'ticket' => 'Ticket',
+        'tour_package' => 'TourPackage',
+        'visa' => 'Visa',
+        'cargo' => 'Cargo'
     ];
 
     /**
@@ -123,10 +122,11 @@ class Order extends \backend\models\BaseModel
     public function rules()
     {
         return [
-            [['type_id', 'created_by', 'modified_by','operator_id','count'], 'integer'],
+            [['type_id', 'created_by', 'modified_by', 'operator_id', 'count'], 'integer'],
             [['created_at', 'modified_at', 'operator_id'], 'safe'],
-            [['number','type', 'status','payment_type'], 'string', 'max' => 32],
-            [['summ','summ_terminal','nds'],'number'],
+            [['number', 'type', 'status', 'payment_type'], 'string', 'max' => 32],
+            [['summ', 'summ_terminal', 'nds'], 'number'],
+            [['terminal_id'], 'exist', 'skipOnError' => true, 'targetClass' => Terminal::class, 'targetAttribute' => ['terminal_id' => 'id']],
         ];
     }
 
@@ -138,14 +138,19 @@ class Order extends \backend\models\BaseModel
         return [
             'id' => 'ID',
             'number' => 'Номер счета',
+            'type' => 'Тип заявки',
+            'type_id' => 'Номер заявки',
             'operator_id' => 'Оператор',
+            'terminal_id' => 'Терминал',
             'count' => 'Количество',
             'summ' => 'Сумма',
             'summ_terminal' => 'Сумма с карты',
             'nds' => 'НДС',
             'status' => 'Статус',
+            'cheque_number' => 'Номер чека',
             'payment_type' => 'Способ оплаты',
             'created_at' => 'Дата создания',
+            'payment_at' => 'Время Оплаты',
             'modified_at' => 'Дата изменения',
             'created_by' => 'Создал',
             'modified_by' => 'Изменил',
@@ -155,7 +160,7 @@ class Order extends \backend\models\BaseModel
     // связанные данные  ?expand=order,operator
     public function extraFields()
     {
-        return ['order','operator','processes','receipt','terminal','service'];
+        return ['order', 'operator', 'processes', 'receipt', 'terminal', 'service'];
     }
 
     /*public function beforeDelete()
@@ -196,6 +201,7 @@ class Order extends \backend\models\BaseModel
     {
         return $this->hasMany(Process::className(), ['order_id' => 'id']);
     }
+
     /**
      * Gets query for [[Receipt]]. чек
      *
@@ -244,9 +250,9 @@ class Order extends \backend\models\BaseModel
      * {@inheritdoc}
      * @return OrderQuery the active query used by this AR class.
      */
-   /* public static function find()
-    {
-        return new OrderQuery(get_called_class());
-    } */
+    /* public static function find()
+     {
+         return new OrderQuery(get_called_class());
+     } */
 
 }

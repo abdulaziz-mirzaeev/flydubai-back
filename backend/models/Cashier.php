@@ -11,6 +11,7 @@ use Yii;
  * @property int $id
  * @property string $name Название
  * @property float $summ Сумма
+ * @property float $summ_terminal Сумма
  * @property string|null $created_at Дата создания
  * @property string|null $modified_at Дата изменения
  * @property int|null $created_by Создал
@@ -41,7 +42,7 @@ class Cashier extends \backend\models\BaseModel
     {
         return [
             [['name'], 'required'],
-            [['summ'], 'number'],
+            [['summ', 'summ_terminal'], 'number'],
             [['created_at', 'modified_at'], 'safe'],
             [['created_by', 'modified_by'], 'integer'],
             [['name'], 'string', 'max' => 32],
@@ -57,6 +58,7 @@ class Cashier extends \backend\models\BaseModel
             'id' => 'ID',
             'name' => 'Название',
             'summ' => 'Сумма',
+            'summ_terminal' => 'Сумма терминал',
             'created_at' => 'Дата создания',
             'modified_at' => 'Дата изменения',
             'created_by' => 'Создал',
