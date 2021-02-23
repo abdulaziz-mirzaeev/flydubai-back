@@ -17,10 +17,11 @@ class ProcessController extends BaseController
 
 
     // оплата перечислением
-    public function actionTransfers(){
+    public function actionTransfers()
+    {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashier'])->where(['payment_type'=>Process::PAYMENT_TYPE_TRANSFER]),
+            'query' => Process::find()->with(['cashier'])->where(['payment_type' => Process::PAYMENT_TYPE_TRANSFER]),
             'pagination' => false,
         ]);
 
@@ -28,10 +29,11 @@ class ProcessController extends BaseController
     }
 
     // список перенесенных средств из кассы в кассу
-    public function actionTransfer(){
+    public function actionTransfer()
+    {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashierFrom','cashier'])->where(['status'=>Process::TYPE_TRANSFER]),
+            'query' => Process::find()->with(['cashierFrom', 'cashier'])->where(['process_type' => Process::TYPE_TRANSFER]),
             'pagination' => false,
         ]);
 
@@ -39,10 +41,11 @@ class ProcessController extends BaseController
     }
 
     // список приходов в кассу
-    public function actionEnter(){
+    public function actionEnter()
+    {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashier'])->where(['status'=>Process::TYPE_ENTER]),
+            'query' => Process::find()->with(['cashier'])->where(['process_type' => Process::TYPE_ENTER]),
             'pagination' => false,
         ]);
 
@@ -50,10 +53,11 @@ class ProcessController extends BaseController
     }
 
     // список оплаченных заказов
-    public function actionPaid(){
+    public function actionPaid()
+    {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashier'])->where(['status'=>Process::TYPE_PAID]),
+            'query' => Process::find()->with(['cashier'])->where(['process_type' => Process::TYPE_PAID]),
             'pagination' => false,
         ]);
 
@@ -61,10 +65,11 @@ class ProcessController extends BaseController
     }
 
     // список расхода средств из кассы
-    public function actionExit(){
+    public function actionExit()
+    {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashier'])->where(['status'=>Process::TYPE_EXIT,'status_director'=>Process::DIRECTOR_CONFIRM_FALSE]),
+            'query' => Process::find()->with(['cashier'])->where(['process_type' => Process::TYPE_EXIT, 'status_director' => Process::DIRECTOR_CONFIRM_FALSE]),
             'pagination' => false,
         ]);
 
@@ -74,7 +79,7 @@ class ProcessController extends BaseController
     public function actionApprove($id)
     {
         $user = User::findOne(Yii::$app->user->id);
-        if ($user->role !== 'director') {
+        if ( $user->role !== 'director' ) {
             Yii::$app->response->statusCode = 403;
             return 'Forbidden';
         }

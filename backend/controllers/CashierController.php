@@ -149,32 +149,28 @@ class CashierController extends BaseController
         if ( !isset($post['cashier_id']) || !$cashier = Cashier::findOne($post['cashier_id']) )
             $errors[] = 'Касса на найдена!';
 
-        if ( !isset($post['order_id']) || !$order = Order::findOne($post['order_id']) )
-            $errors[] = 'Эта заявка не найдена!';
-
         if ( empty($errors) ) {
-
-
             $cashier->summ += $post['summ'];
 
             // приход в кассу
             $process = new Process();
             $process->cashier_id = $cashier->id;
             $process->summ = $post['summ'];
+            $process->comment = $post['comment'];
             $process->process_type = Process::TYPE_ENTER;
 
             if ( $cashier->save() && $process->save() ) {
                 $message = 'Поступили средства в кассы ' . $cashier->name . ' на сумму ' . $process->summ;
                 Notification::send(Notification::ENTER, $process->id, Notification::STATUS_PROCESS, $message);
-                return ['status' => 1];
+                return ['message' => 'Success'];
             }
 
             if ( $cashier->hasErrors() ) $errors[] = $cashier->getErrors();
             if ( $process->hasErrors() ) $errors[] = $process->getErrors();
 
         }
-
-        return ['status' => 0, 'errors' => $errors];
+        Yii::$app->response->statusCode = 422;
+        return ['errors' => $errors];
 
     }
 
@@ -226,12 +222,14 @@ class CashierController extends BaseController
         if ( !$errors ) {
 
             if ( $cashier->summ - $post['summ'] < 0 ) {
-                return ['status' => 0, 'errors' => 'Расход превышает остаток в кассе!'];
+                Yii::$app->response->statusCode = 422;
+                return ['errors' => 'Расход превышает остаток в кассе!'];
             }
 
             // для исключения повторного снятия одной и той же суммы, проверка, пока не будет подтверждено директором
             if ( $process = Process::find()->where(['summ' => $post['summ'], 'cashier_id' => $post['cashier_id'], 'process_type' => Process::TYPE_EXIT, 'status' => 0])->one() ) {
-                return ['status' => 0, 'errors' => 'Процесс уже создан, его необходимо подтвердить директором!'];
+                Yii::$app->response->statusCode = 422;
+                return ['errors' => 'Процесс уже создан, его необходимо подтвердить директором!'];
             }
 
             // расход из кассы
@@ -240,6 +238,7 @@ class CashierController extends BaseController
             $process = new Process();
             $process->cashier_id = $cashier->id;
             $process->summ = $post['summ'];
+            $process->comment = $post['comment'];
             $process->process_type = Process::TYPE_EXIT;
 
             // перед снятием средств нужно подтверждение директора status_director=1
@@ -249,7 +248,7 @@ class CashierController extends BaseController
             if ( $process->save() ) {
                 $message = 'Произведен расход средств из кассы ' . $cashier->name . ' на сумму ' . $process->summ;
                 Notification::send(Notification::CONFIRM_EXIT, $process->id, Notification::STATUS_PROCESS, $message); // отправляем уведомление
-                return ['status' => 1];
+                return ['message' => 'Success'];
             }
 
             if ( $cashier->hasErrors() ) $errors[] = $cashier->getErrors();
@@ -257,7 +256,8 @@ class CashierController extends BaseController
 
         }
 
-        return ['status' => 0, 'errors' => $errors];
+        Yii::$app->response->statusCode = 422;
+        return ['errors' => $errors];
     }
 
 
@@ -314,21 +314,26 @@ class CashierController extends BaseController
         if ( !isset($post['cashier_from']) ) $errors[] = 'Не задана касса откуда!';
         if ( isset($post['cashier_from']) && $post['cashier_from'] == 0 ) $errors[] = 'Не задана касса откуда!';
 
-        if ( !$cashier = Cashier::findOne($post['cashier_id']) ) $errors[] = 'Касса Куда не задана!';
-        if ( !$cashier_from = Cashier::findOne($post['cashier_from']) ) $errors[] = 'Касса Откуда не задана!';
+        if ( !$cashier = Cashier::findOne($post['cashier_id']) ) $errors[] = '(Касса Куда) такой кассы не существует!';
+        if ( !$cashier_from = Cashier::findOne($post['cashier_from']) ) $errors[] = '(Касса Откуда) такой кассы не существует!';
 
-        if ( $errors ) return ['status' => 0, 'errors' => $errors];
+        if ( $errors ) {
+            Yii::$app->response->statusCode = 422;
+            return [$errors];
+        }
 
         // если валидация прошла и кассы существуют
         if ( $cashier && $cashier_from ) {
 
             if ( $cashier_from->summ - $post['summ'] < 0 ) {
-                return ['status' => 0, 'errors' => 'Расход превышает остаток в кассе!'];
+                Yii::$app->response->statusCode = 422;
+                return ['errors' => 'Расход превышает остаток в кассе!'];
             }
 
             // для исключения повторного снятия одной и той же суммы, проверка, пока не будет подтверждено директором
             if ( $process = Process::find()->where(['summ' => $post['summ'], 'cashier_id' => $post['cashier_id'], 'cashier_from' => $post['cashier_from'], 'process_type' => Process::TYPE_TRANSFER, 'status' => 0])->one() ) {
-                return ['status' => 0, 'errors' => 'Процесс уже создан, его необходимо подтвердить директором!'];
+                Yii::$app->response->statusCode = 422;
+                return ['errors' => 'Процесс уже создан, его необходимо подтвердить директором!'];
             }
 
             // приход в кассу
@@ -336,6 +341,7 @@ class CashierController extends BaseController
             $process->process_type = Process::TYPE_TRANSFER;
             $process->cashier_from = $cashier_from->id;
             $process->cashier_id = $cashier->id;
+            $process->comment = $post['comment'];
             $process->summ = $post['summ'];
             $process->status_director = 0;
             $process->status = 0;
@@ -344,7 +350,7 @@ class CashierController extends BaseController
                 $message = 'Произведен перенос средств из кассы ' . $cashier_from->name . ' в кассу ' . $cashier->name . ' на сумму ' . $process->summ;
                 Notification::send(Notification::CONFIRM_TRANSFER, $process->id, Notification::STATUS_PROCESS, $message); // отправляем новое уведомление
 
-                return ['status' => 1];
+                return ['message' => 'Success'];
             }
 
             if ( $cashier->hasErrors() ) $errors[] = $cashier->getErrors();
@@ -373,8 +379,7 @@ class CashierController extends BaseController
         if ( $process && !$cashier_from = Cashier::findOne($process->cashier_from) ) $errors[] = 'Касса Откуда не задана!';
 
         // если валидация прошла и кассы существуют
-        if ( !$errors && $cashier && $cashier_from
-        ) {
+        if ( !$errors && $cashier && $cashier_from ) {
 
             if ( $cashier->summ - $process->summ < 0 ) $errors[] = 'Расход превышает остаток в кассе!';
 

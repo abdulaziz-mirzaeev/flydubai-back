@@ -86,7 +86,7 @@ class Process extends \backend\models\BaseModel
     // связанные данные  ?expand=order,operator
     public function extraFields()
     {
-        return ['order', 'cashier', 'cashierFrom', ''];
+        return ['order', 'cashier', 'cashierFrom', 'cashier'];
     }
 
 
@@ -124,7 +124,7 @@ class Process extends \backend\models\BaseModel
             'process_type' => 'Тип процесса',
             'payment_type' => 'Тип оплаты',
             'terminal_id' => 'Терминал',
-            'status_director' => 'Статус директора',
+            'status_director' => 'Подтверждение директора',
             'status' => 'Статус вывода',
             'comment' => 'Комментарий',
             'created_at' => 'Дата создания',

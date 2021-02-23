@@ -103,6 +103,10 @@ class OrderController extends BaseController
             $order = Order::findOne($post['order_id']);
             if ( empty($order) ) {
                 $errors['order_id'] = 'Эта заявка не существует!';
+            } else {
+                if ($order->status === Order::STATUS_PAID) {
+                    $errors['order_id'] = 'Оплата за эту заявку уже воспроизведена!';
+                }
             }
         }
 
