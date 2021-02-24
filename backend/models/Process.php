@@ -53,7 +53,7 @@ class Process extends \backend\models\BaseModel
         self::PAYMENT_TYPE_TERMINAL => 'ТЕРМИНАЛ',
         self::PAYMENT_TYPE_VALUTE => 'ВАЛЮТА',
         self::PAYMENT_TYPE_TRANSFER => 'ПЕРЕЧИСЛЕНИЕ',
-        self::PAYMENT_TYPE_CASH_TERMINAL => 'СМЕШАННЫЙ'
+        self::PAYMENT_TYPE_CASH_TERMINAL => 'СМЕШАННЫЙ (НАЛИЧНЫЕ И ТЕРМИНАЛ)'
     ];
     public const processType = [
         self::TYPE_ENTER => 'ПРИХОД',
