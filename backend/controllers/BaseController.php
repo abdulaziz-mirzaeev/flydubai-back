@@ -9,6 +9,8 @@ use yii\data\Sort;
 use yii\filters\auth\HttpBearerAuth;
 use yii\rest\ActiveController;
 
+die('hello');
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT');
 header("Access-Control-Allow-Headers: *");
@@ -50,7 +52,7 @@ class BaseController extends ActiveController
     public function init()
     {
 
-        if (Yii::$app->request->isOptions) {
+        if ( Yii::$app->request->isOptions ) {
             Yii::$app->response->setStatusCode(200);
             exit;
         }
@@ -64,20 +66,6 @@ class BaseController extends ActiveController
         return $actions;
     }
 
-
-
-    protected function verbs()
-    {
-        return [
-            'index' => ['GET'],
-            'view' => ['GET'],
-            'create' => ['POST', 'OPTIONS'],
-            'update' => ['POST'],
-            'delete' => ['POST']
-        ];
-    }
-
-
     public function actionSearch()
     {
         $query = $this->modelClass::find();
@@ -88,91 +76,6 @@ class BaseController extends ActiveController
         ]);
     }
 
-    /** получаем список всех атрибутов выбранной модели в get запросе Model[id]=..&Model[attr]=.. */
-    public function getQueryAttributes()
-    {
-
-        $this->get = \Yii::$app->request->get(trim($this->modelClass::baseModelClass()));
-        return $this->get;
-    }
-
-    public function getPost()
-    {
-        $this->post = \Yii::$app->request->post();
-        return $this->post;
-    }
-
-
-    /** поиск строковых значений */
-    public function getStringFields()
-    {
-        if ($this->stringFields) {
-            return $this->stringFields;
-        }
-
-        $result = [];
-        foreach ((new $this->modelClass())->rules() as $rule) {
-            if ($rule[1] == 'string') {
-                foreach ($rule[0] as $name) {
-                    $result[] = $name;
-                }
-            }
-        }
-        $this->stringFields = $result;
-        return $result;
-    }
-
-    // поиск по значению
-    public function getWhere(&$query)
-    {
-
-        $arr_query = $this->getQueryAttributes();
-
-        $result = [];
-
-        if (!$arr_query) return $result;
-
-        $fields = $this->getStringFields();
-
-        if ($arr_query) {
-            foreach ($arr_query as $k => $v) {
-                if (!in_array($k, $fields)) {
-                    // берем точное совпадение
-                    //$result[$k] = $v;
-                    $query->andWhere([$k => $v]);
-                }
-            }
-        }
-
-        return true; // $result;
-
-    }
-
-    // для поиска строковых значений
-    public function getWhereLike(&$query)
-    {
-
-        $fields = $this->getQueryAttributes();
-
-        if (empty($fields)) return false;
-
-        $strings = $this->getStringFields();
-
-        foreach ($strings as $name) {
-
-            if (key_exists($name, $fields)) {
-                $query->andWhere(['like', "$name", $fields[$name]]);
-            }
-
-        }
-
-        //q($query,1);
-
-        return true;
-    }
-
-
-    // формирование query запроса
     public function getQuery(&$query)
     {
 
@@ -187,6 +90,83 @@ class BaseController extends ActiveController
 
     }
 
+    public function getWhere(&$query)
+    {
+
+        $arr_query = $this->getQueryAttributes();
+
+        $result = [];
+
+        if ( !$arr_query ) return $result;
+
+        $fields = $this->getStringFields();
+
+        if ( $arr_query ) {
+            foreach ( $arr_query as $k => $v ) {
+                if ( !in_array($k, $fields) ) {
+                    // берем точное совпадение
+                    //$result[$k] = $v;
+                    $query->andWhere([$k => $v]);
+                }
+            }
+        }
+
+        return true; // $result;
+
+    }
+
+    /** получаем список всех атрибутов выбранной модели в get запросе Model[id]=..&Model[attr]=.. */
+    public function getQueryAttributes()
+    {
+
+        $this->get = \Yii::$app->request->get(trim($this->modelClass::baseModelClass()));
+        return $this->get;
+    }
+
+    /** поиск строковых значений */
+    public function getStringFields()
+    {
+        if ( $this->stringFields ) {
+            return $this->stringFields;
+        }
+
+        $result = [];
+        foreach ( (new $this->modelClass())->rules() as $rule ) {
+            if ( $rule[1] == 'string' ) {
+                foreach ( $rule[0] as $name ) {
+                    $result[] = $name;
+                }
+            }
+        }
+        $this->stringFields = $result;
+        return $result;
+    }
+
+    // поиск по значению
+
+    public function getWhereLike(&$query)
+    {
+
+        $fields = $this->getQueryAttributes();
+
+        if ( empty($fields) ) return false;
+
+        $strings = $this->getStringFields();
+
+        foreach ( $strings as $name ) {
+
+            if ( key_exists($name, $fields) ) {
+                $query->andWhere(['like', "$name", $fields[$name]]);
+            }
+
+        }
+
+        //q($query,1);
+
+        return true;
+    }
+
+    // для поиска строковых значений
 
     /**  формат для выборочного условия в фильтрации
      * пример:
@@ -204,14 +184,14 @@ class BaseController extends ActiveController
         $conditions = Yii::$app->request->get('condition'); //   несколько условий like, >, <, =, !=, <>
 
         // если есть условие
-        if (isset($conditions)) {
-            if (is_array($conditions['field']) && count($conditions['field']) > 1) {
+        if ( isset($conditions) ) {
+            if ( is_array($conditions['field']) && count($conditions['field']) > 1 ) {
                 // запрос несколько условий AND ?condition[field][]=id&condition[condition][]=>&condition[value][]=2&condition[field][]=cost_price&condition[condition][]=>&condition[value][]=100
-                for ($i = 0; $i < count($conditions['field']); $i++) {
+                for ( $i = 0; $i < count($conditions['field']); $i++ ) {
                     $query->andWhere([$conditions['condition'][$i], $conditions['field'][$i], $conditions['value'][$i]]);
                 }
             } else {
-                if (is_array($conditions['field'])) {
+                if ( is_array($conditions['field']) ) {
                     // запрос 1 элемент в массиве ?condition[field][]=id&condition[condition][]=>&condition[value][]=2
                     $i = 0;
                     $query->andWhere([$conditions['condition'][$i], $conditions['field'][$i], $conditions['value'][$i]]);
@@ -226,13 +206,22 @@ class BaseController extends ActiveController
         return false;
     }
 
+
+    // формирование query запроса
+
+    public function getPost()
+    {
+        $this->post = \Yii::$app->request->post();
+        return $this->post;
+    }
+
     public function getPageSize()
     {
         return \Yii::$app->request->get('page') ?? $this->defaultPageSize;
     }
 
-    // получить все записи в таблице выбранной модели
-    public function actionAll(){
+    public function actionAll()
+    {
 
         $provider = new ActiveDataProvider([
             'query' => $this->modelClass::find(),
@@ -242,6 +231,8 @@ class BaseController extends ActiveController
         return $provider;
 
     }
+
+    // получить все записи в таблице выбранной модели
 
     public function actionIndex()
     {
@@ -253,11 +244,23 @@ class BaseController extends ActiveController
         return $provider;
     }
 
-    // получение информации о моделе
-    public function actionInfo(){
-       return $this->modelClass::getInfo();
+    public function actionInfo()
+    {
+        return $this->modelClass::getInfo();
     }
 
+    // получение информации о моделе
+
+    protected function verbs()
+    {
+        return [
+            'index' => ['GET'],
+            'view' => ['GET'],
+            'create' => ['POST', 'OPTIONS'],
+            'update' => ['POST'],
+            'delete' => ['POST']
+        ];
+    }
 
 
 }
