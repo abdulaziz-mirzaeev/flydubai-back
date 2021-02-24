@@ -245,12 +245,14 @@ class OrderController extends BaseController
     }
 
     // Получение чека по ID заявки
-    public function actionGetReceipt($id)
+    public function actionGetreceipt($id)
     {
 
         if ( $receipt = Receipt::find()->where(['order_id' => $id])->one() ) {
-            return $receipt->data;
+            return json_decode($receipt->data);
         }
+
+        return ['errors' => 'Чек не найден'];
 
     }
 

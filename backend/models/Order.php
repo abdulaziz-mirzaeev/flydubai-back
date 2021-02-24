@@ -261,6 +261,11 @@ class Order extends \backend\models\BaseModel
         return $this->hasOne(Operator::className(), ['id' => 'operator_id']);
     }
 
+    public function getReceiptData()
+    {
+        return Receipt::findOne(['order_id' => $this->id])->data;
+    }
+
 
     /**
      * {@inheritdoc}

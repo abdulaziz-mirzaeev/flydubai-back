@@ -1,4 +1,5 @@
 <?php
+
 namespace common\models;
 
 use backend\controllers\BaseController;
@@ -24,6 +25,7 @@ use yii\web\IdentityInterface;
  * @property string $token
  * @property string $number
  * @property string $password write-only password
+ * @property string $role
  */
 class User extends ActiveRecord implements IdentityInterface
 {
@@ -38,32 +40,6 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return '{{%user}}';
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors()
-    {
-        return [
-            TimestampBehavior::className(),
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function rules()
-    {
-        return [
-            ['status', 'default', 'value' => self::STATUS_INACTIVE],
-            [['username'], 'required', 'message' => 'Заполните поле Имя пользователя'],
-            [['password_hash'], 'required', 'message' => 'Введите пароль'],
-            [['username', 'email'], 'unique', 'message' => 'Something went wrong!'],
-            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_DELETED]],
-            [['token'],'string','max' => 512],
-        ];
-    }
-
 
     /**
      * {@inheritdoc}
@@ -101,26 +77,13 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function findByPasswordResetToken($token)
     {
-        if (!static::isPasswordResetTokenValid($token)) {
+        if ( !static::isPasswordResetTokenValid($token) ) {
             return null;
         }
 
         return static::findOne([
             'password_reset_token' => $token,
             'status' => self::STATUS_ACTIVE,
-        ]);
-    }
-
-    /**
-     * Finds user by verification email token
-     *
-     * @param string $token verify email token
-     * @return static|null
-     */
-    public static function findByVerificationToken($token) {
-        return static::findOne([
-            'verification_token' => $token,
-            'status' => self::STATUS_INACTIVE
         ]);
     }
 
@@ -132,13 +95,52 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function isPasswordResetTokenValid($token)
     {
-        if (empty($token)) {
+        if ( empty($token) ) {
             return false;
         }
 
-        $timestamp = (int) substr($token, strrpos($token, '_') + 1);
+        $timestamp = (int)substr($token, strrpos($token, '_') + 1);
         $expire = Yii::$app->params['user.passwordResetTokenExpire'];
         return $timestamp + $expire >= time();
+    }
+
+    /**
+     * Finds user by verification email token
+     *
+     * @param string $token verify email token
+     * @return static|null
+     */
+    public static function findByVerificationToken($token)
+    {
+        return static::findOne([
+            'verification_token' => $token,
+            'status' => self::STATUS_INACTIVE
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function behaviors()
+    {
+        return [
+            TimestampBehavior::className(),
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function rules()
+    {
+        return [
+            ['status', 'default', 'value' => self::STATUS_INACTIVE],
+            [['username'], 'required', 'message' => 'Заполните поле Имя пользователя'],
+            [['password_hash'], 'required', 'message' => 'Введите пароль'],
+            [['username', 'email'], 'unique', 'message' => 'Something went wrong!'],
+            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_DELETED]],
+            [['token'], 'string', 'max' => 512],
+        ];
     }
 
     /**
@@ -152,17 +154,17 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * {@inheritdoc}
      */
-    public function getAuthKey()
+    public function validateAuthKey($authKey)
     {
-        return $this->auth_key;
+        return $this->getAuthKey() === $authKey;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function validateAuthKey($authKey)
+    public function getAuthKey()
     {
-        return $this->getAuthKey() === $authKey;
+        return $this->auth_key;
     }
 
     /**
