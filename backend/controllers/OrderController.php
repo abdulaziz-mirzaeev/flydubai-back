@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use backend\models\Receipt;
 use Yii;
 use backend\models\Cashier;
 use backend\models\Notification;
@@ -104,7 +105,7 @@ class OrderController extends BaseController
             if ( empty($order) ) {
                 $errors['order_id'] = 'Эта заявка не существует!';
             } else {
-                if ($order->status === Order::STATUS_PAID) {
+                if ( $order->status === Order::STATUS_PAID ) {
                     $errors['order_id'] = 'Оплата за эту заявку уже воспроизведена!';
                 }
             }
@@ -113,6 +114,8 @@ class OrderController extends BaseController
         if ( empty($post['payment_type']) ) $errors['payment_type'] = 'Способ оплаты на введена!';
 
         if ( empty($post['nds']) ) $errors['nds'] = 'НДС не введен';
+
+        if ( empty($post['terminal_id']) ) $errors['terminal_id'] = 'Терминал (ККМ) не выбран!';
 
         switch ( $post['payment_type'] ) {
             case Process::PAYMENT_TYPE_CASH:
@@ -124,9 +127,6 @@ class OrderController extends BaseController
                 if ( empty($post['summ_terminal']) ) {
                     $errors['summ_terminal'] = 'Сумма терминала не введена!';
                 }
-                if ( empty($post['terminal_id']) ) {
-                    $errors['terminal_id'] = 'ID терминала не введен!';
-                }
                 break;
             case Process::PAYMENT_TYPE_CASH_TERMINAL:
                 if ( empty($post['summ']) ) {
@@ -134,9 +134,6 @@ class OrderController extends BaseController
                 }
                 if ( empty($post['summ_terminal']) ) {
                     $errors['summ_terminal'] = 'Сумма терминалом не введена!';
-                }
-                if ( empty($post['terminal_id']) ) {
-                    $errors['terminal_id'] = 'ID терминала не введен!';
                 }
                 break;
             case Process::PAYMENT_TYPE_TRANSFER:
@@ -156,81 +153,107 @@ class OrderController extends BaseController
             $order->cashier_id = $post['cashier_id'];
             $order->payment_type = $post['payment_type'];
             $order->nds = $post['nds'];
+            $order->terminal_id = $post['terminal_id'];
             $order->payment_at = date('Y-m-d H:i:s', time());
-            $order->status = Order::STATUS_PAID;
+//            $order->status = Order::STATUS_PAID;
             // приход в кассу
             $process = new Process();
             $process->cashier_id = $cashier->id;
             $process->nds = $post['nds'];
+            $process->terminal_id = $post['terminal_id'];
             $process->order_id = $order->id;
             $process->process_type = Process::TYPE_ENTER;
             $process->payment_type = $post['payment_type'];
 
 
-            switch ( $post['payment_type'] ) {
-                case Process::PAYMENT_TYPE_CASH:
-                    // Cash Payment
-                    $order->summ = $post['summ'];
+            /**
+             * terminal_id - 95148  - id терминала в системе API
+             * order_id - 1025 - id заказа
+             * status -
+             */
+            // создаем чек
+            $receipt = Receipt::create([
+                'terminal_id' => $post['terminal_id'],
+                'order_id' => $order->id,
+                'status' => Order::STATUS_PAID,
+            ]);
 
-                    $cashier->summ += $post['summ'];
+            if ( !array_key_exists('errors', $receipt) ) {
+                switch ( $post['payment_type'] ) {
+                    case Process::PAYMENT_TYPE_CASH:
+                        // Cash Payment
+                        $order->summ = $post['summ'];
 
-                    $process->summ = $post['summ'];
-                    break;
-                case Process::PAYMENT_TYPE_TERMINAL:
-                    // Terminal Payment
-                    $order->summ_terminal = $post['summ_terminal'];
-                    $order->terminal_id = $post['terminal_id'];
-                    $order->summ_terminal = $post['summ_terminal'];
+                        $cashier->summ += $post['summ'];
 
-                    $cashier->summ_terminal += $post['summ_terminal'];
+                        $process->summ = $post['summ'];
+                        break;
+                    case Process::PAYMENT_TYPE_TERMINAL:
+                        // Terminal Payment
+                        $order->summ_terminal = $post['summ_terminal'];
+                        $order->summ_terminal = $post['summ_terminal'];
 
-                    $process->summ_terminal = $post['summ_terminal'];
-                    $process->terminal_id = $post['terminal_id'];
-                    break;
-                case Process::PAYMENT_TYPE_CASH_TERMINAL:
-                    // Cash - Terminal Payment
-                    $order->summ = $post['summ'];
-                    $order->summ_terminal = $post['summ_terminal'];
-                    $order->terminal_id = $post['terminal_id'];
-                    $order->summ_terminal = $post['summ_terminal'];
+                        $cashier->summ_terminal += $post['summ_terminal'];
 
-                    $cashier->summ += $post['summ'];
-                    $cashier->summ_terminal += $post['summ_terminal'];
+                        $process->summ_terminal = $post['summ_terminal'];
+                        break;
+                    case Process::PAYMENT_TYPE_CASH_TERMINAL:
+                        // Cash - Terminal Payment
+                        $order->summ = $post['summ'];
+                        $order->summ_terminal = $post['summ_terminal'];
+                        $order->summ_terminal = $post['summ_terminal'];
 
-                    $process->summ = $post['summ'];
-                    $process->summ_terminal = $post['summ_terminal'];
-                    $process->terminal_id = $post['terminal_id'];
-                    break;
-                case Process::PAYMENT_TYPE_TRANSFER:
-                    $order->summ = $post['summ'];
-                    $order->cheque_number = $post['cheque_number'];
+                        $cashier->summ += $post['summ'];
+                        $cashier->summ_terminal += $post['summ_terminal'];
 
-                    $process->summ = $post['summ'];
-                    $process->cheque_number = $post['cheque_number'];
-                    break;
+                        $process->summ = $post['summ'];
+                        $process->summ_terminal = $post['summ_terminal'];
+                        break;
+                    case Process::PAYMENT_TYPE_TRANSFER:
+                        $order->summ = $post['summ'];
+                        $order->cheque_number = $post['cheque_number'];
+
+                        $process->summ = $post['summ'];
+                        $process->cheque_number = $post['cheque_number'];
+                        break;
+                }
+
+                if ( $cashier->save() && $process->save() && $order->save() ) {
+                    $message = 'Поступили средства в кассы ' . $cashier->name . ' на сумму ' . $process->summ;
+                    Notification::send(Notification::ENTER, $process->id, Notification::STATUS_PROCESS, $message);
+                    Yii::$app->response->statusCode = 200;
+                    return [
+                        'message' => 'Success',
+                        'process' => $process->id,
+                        'order' => $order->id,
+                        'cashier' => $cashier->id
+                    ];
+                }
+
+                if ( $cashier->hasErrors() ) $errors[] = $cashier->getErrors();
+                if ( $process->hasErrors() ) $errors[] = $process->getErrors();
+                if ( $order->hasErrors() ) $errors[] = $order->getErrors();
+            } else {
+                $errors['receipt'] = $receipt['errors'];
             }
-
-            if ( $cashier->save() && $process->save() && $order->save() ) {
-                $message = 'Поступили средства в кассы ' . $cashier->name . ' на сумму ' . $process->summ;
-                Notification::send(Notification::ENTER, $process->id, Notification::STATUS_PROCESS, $message);
-                Yii::$app->response->statusCode = 200;
-                return [
-                    'message' => 'Success',
-                    'process' => $process->id,
-                    'order' => $order->id,
-                    'cashier' => $cashier->id
-                ];
-            }
-
-            if ( $cashier->hasErrors() ) $errors[] = $cashier->getErrors();
-            if ( $process->hasErrors() ) $errors[] = $process->getErrors();
-            if ( $order->hasErrors() ) $errors[] = $order->getErrors();
 
         }
+
         Yii::$app->response->statusCode = 422;
         return $errors;
 
     }
+
+    // Получение чека по ID заявки
+    public function actionGetReceipt($id)
+    {
+
+        if ( $receipt = Receipt::find()->where(['order_id' => $id])->one() ) {
+            return $receipt->data;
+        }
+
+    }
+
 
     public function actionReturnback($id)
     {

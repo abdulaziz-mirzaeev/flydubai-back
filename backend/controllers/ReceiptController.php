@@ -98,7 +98,7 @@ class ReceiptController extends BaseController
 
         // проверяем переданный терминал
         if (isset($post['terminal_id'])) {
-            if(!$terminal = Terminal::find()->where(['terminalID' => (int)$post['terminal_id']])->one()){
+            if(!$terminal = Terminal::find()->where(['id' => (int)$post['terminal_id']])->one()){
                 $errors[] = 'Задан не верный ID терминала!';
             }
         } else {
@@ -264,7 +264,7 @@ class ReceiptController extends BaseController
             }
 
         }
-
+        Yii::$app->response->statusCode = 422;
         return ['status' => 0, 'errors' => $errors];
 
     }

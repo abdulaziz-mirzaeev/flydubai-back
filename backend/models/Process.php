@@ -123,7 +123,7 @@ class Process extends \backend\models\BaseModel
             'nds' => 'НДС',
             'process_type' => 'Тип процесса',
             'payment_type' => 'Тип оплаты',
-            'terminal_id' => 'Терминал',
+            'terminal_id' => 'Терминал (ККМ)',
             'status_director' => 'Подтверждение директора',
             'status' => 'Статус вывода',
             'comment' => 'Комментарий',
