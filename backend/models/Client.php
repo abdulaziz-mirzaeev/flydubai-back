@@ -65,7 +65,7 @@ class Client extends \backend\models\BaseModel
             [['passport_serial'], 'string', 'max' => 16],
             [['email'], 'email'],
             ['phone', 'string', 'max' => 24],
-            [['client_type_id'], 'exist', 'skipOnError' => true, 'targetClass' => ClientType::className(), 'targetAttribute' => ['client_type_id' => 'id']],
+//            [['client_type_id'], 'exist', 'skipOnError' => true, 'targetClass' => ClientType::className(), 'targetAttribute' => ['client_type_id' => 'id']],
         ];
     }
 
