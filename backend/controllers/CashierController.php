@@ -108,7 +108,7 @@ class CashierController extends BaseController
         return $provider;
     }
 
-    // список подтвержденных Директором перенесенных средств из кассы в кассу
+    // список подтвержденных Выведенных средств из кассы
 
     public function actionExitconfirms()
     {
