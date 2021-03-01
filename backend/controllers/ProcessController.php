@@ -69,7 +69,23 @@ class ProcessController extends BaseController
     {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashier'])->where(['process_type' => Process::TYPE_EXIT, 'status_director' => Process::DIRECTOR_CONFIRM_FALSE]),
+            'query' => Process::find()->where(['process_type' => Process::TYPE_EXIT]),
+            'pagination' => false,
+        ]);
+
+        return $provider;
+    }
+
+    public function actionUnconfirmed()
+    {
+
+        $provider = new ActiveDataProvider([
+            'query' => Process::find()
+                ->with(['cashier'])
+                ->where([
+                    'process_type' => [Process::TYPE_EXIT, Process::TYPE_RETURNED, Process::TYPE_TRANSFER],
+                    'status_director' => Process::DIRECTOR_CONFIRM_FALSE
+                ]),
             'pagination' => false,
         ]);
 

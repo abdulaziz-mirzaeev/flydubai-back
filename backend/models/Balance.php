@@ -2,6 +2,7 @@
 
 namespace backend\models;
 
+use app\traits\BaseModelTrait;
 use Yii;
 
 /**
@@ -18,6 +19,9 @@ use Yii;
  */
 class Balance extends \backend\models\BaseModel
 {
+    use BaseModelTrait;
+
+
     /**
      * {@inheritdoc}
      */

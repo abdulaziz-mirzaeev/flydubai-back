@@ -116,10 +116,22 @@ class Cdr extends \backend\models\BaseModel
     }
 
     const status_callcenter = [
-        'just' => 'Нечойно',
-        'call' => 'Для Билеть',
-        'test' => 'Тестывий',
+        'ordered' => 'Сделал заказ',
+        'about_ticket' => 'Узнал информацию по билетам, визам, турпакетам, карго',
+        'about_company' => 'Узнал информацию о компании',
+        'placed_reservation' => 'Поставил бронь',
     ];
+
+    /**
+     * @param $number
+     * @return mixed
+     *
+     *
+     *
+     * •
+     * •
+     * •
+     */
 
     public static function getCallerId($number)
     {
@@ -162,13 +174,10 @@ class Cdr extends \backend\models\BaseModel
             s.dst";
         }
 
-
         $incomings = self::getBySql($incomingSql);
-
 
         if ($callerId)
             $outgoings = self::getBySql($outgoingSql)->all();
-
 
         if (!$outgoings)
             $outgoings = [];
@@ -176,26 +185,20 @@ class Cdr extends \backend\models\BaseModel
         foreach ($incomings as $keyIn => $incoming) {
             if ($callerId) {
                 foreach ($outgoings as $keyOut => $outgoing) {
-
                     if ($incoming['src'] === $outgoing['dst']) {
-
                         if (strtotime($incoming['calldate']) > strtotime($outgoing['calldate'])) {
                             unset($outgoings[$keyOut]);
                         } else {
                             unset($incomings[$keyIn]);
                         }
-
                     }
                 }
             }
         }
 
-
         foreach ($incomings as $incoming) {
-
             if ($incoming['disposition'] === 'ANSWERED')
                 continue;
-
             $r[] = [
                 'client' => $incoming['src'],
                 'operator' => $incoming['dst'],
@@ -205,16 +208,12 @@ class Cdr extends \backend\models\BaseModel
                 'userfield' => $incoming['userfield'],
 
             ];
-
         }
 
         if ($callerId) {
-
             foreach ($outgoings as $outgoing) {
-
                 if ($outgoing['disposition'] === 'ANSWERED')
                     continue;
-
                 $r[] = [
                     'client' => $outgoing['dst'],
                     'operator' => $outgoing['src'],
@@ -224,20 +223,87 @@ class Cdr extends \backend\models\BaseModel
                     'userfield' => $outgoing['userfield'],
                 ];
             }
-
         }
 
         return $r;
     }
 
+    public static function getMissedCallsByExt($from, $to, $extention)
+    {
+
+        // extentionga keluvchi nomerlarni maxmalini olib keladi agar dispotion ANSWERED bo'lsa o'tkazib yuboramiz
+        //
+        $return = [];
+
+        if (!$from && !$to && !$extention)
+            return $return;
+
+        $sql = "SELECT s.calldate, s.uniqueid, s.src, s.dst, s.userfield, s.disposition
+            FROM cdr AS s WHERE dst = \"$extention\" AND s.calldate IN ( SELECT p.calldate FROM cdr p
+	        INNER JOIN ( SELECT MAX(calldate) AS max_date FROM cdr WHERE
+	         cdr.calldate BETWEEN \"$from\" AND \"$to\" GROUP BY src ORDER BY calldate ASC ) m
+	          ON calldate = m.max_date ) GROUP BY s.src";
+
+        $incomings = self::getBySql($sql);
+
+        foreach ($incomings as $incoming) {
+
+            if ($incoming['disposition'] === 'ANSWERED')
+                continue;
+
+            $r = [
+                'src' => $incoming['src'],
+                'dst' => $incoming['dst'],
+                'calldate' => $incoming['calldate'],
+                'uniqueid' => $incoming['uniqueid'],
+                'disposition' => $incoming['disposition'],
+                'userfield' => $incoming['userfield'],
+            ];
+            $return[] = $r;
+        }
+
+        return $return;
+
+    }
+
+    public static function getAllCallsByExt($from, $to, $extention)
+    {
+
+        // bitta exstention tegishli hammasini olib keladi
+        $return = [];
+        if (!$from && !$to && !$extention)
+            return $return;
+
+        $sql = " SELECT `calldate`,  `src` , `dst`, `disposition`, `userfield` FROM `cdr` WHERE  `dst` = \"$extention\" AND
+            `calldate`  BETWEEN  \"$from\" AND \"$to\" ORDER BY `calldate` DESC";
+
+        $incomings = self::getBySql($sql);
+
+        foreach ($incomings as $incoming) {
+
+            $r = [
+                'client' => $incoming['src'],
+                'operator' => $incoming['dst'],
+                'calldate' => $incoming['calldate'],
+                'uniqueid' => $incoming['uniqueid'],
+                'disposition' => $incoming['disposition'],
+                'userfield' => $incoming['userfield'],
+            ];
+
+            $return[] = $r;
+
+        }
+
+        return $return;
+    }
 
     public static function getCountStatus($from, $to, $number)
     {
         if (!$number)
             return;
 
-        $sql = "SELECT COUNT(DISTINCT uniqueid) as count , userfield as status , dst as number FROM cdr  WHERE calldate BETWEEN  \"$from\" AND \"$to\" 
-                    AND userfield != '' AND dst = $number GROUP BY userfield";
+        $sql = "SELECT COUNT(DISTINCT `uniqueid`) as `count` , `userfield` as `status` , `dst` as `number` FROM `cdr`  WHERE `calldate` BETWEEN  \"$from\" AND \"$to\" 
+                    AND `userfield` != '' AND `dst` = \"$number\" GROUP BY `userfield`";
 
         $result = self::getBySql($sql);
 
@@ -247,22 +313,79 @@ class Cdr extends \backend\models\BaseModel
 
     public static function getStats($from, $to)
     {
-
         $return = [];
 
-        $users = User::find()->where([
-            'role' => 'operator'
-        ])->all();
+        $users = User::find()->select('operator.number')->rightJoin('operator', 'operator.id=user.id')->all();
 
         foreach ($users as $user) {
+
+            if (!$user->number)
+                continue;
+
             $temp = self::getCountStatus($from, $to, $user->number);
             if (!$temp)
                 continue;
+
             $return[] = $temp;
+
         }
 
         return $return;
-
     }
+
+
+    public static function getStatuses()
+    {
+        return self::status_callcenter;
+    }
+
+     //gets times
+    public static function getDateTime($day)
+    {
+
+        $time = [
+            'from' => null,
+            'to' => null,
+        ];
+
+
+        switch (true) {
+            case $day === 'first':
+                $time['from'] = $to = date('Y-m-d H:i:s', strtotime('today'));
+                $time['to'] = $from = date('Y-m-d H:i:s', strtotime($to . '+1 days'));
+                return $time;
+                break;
+
+            case $day === 'second':
+                $time['to'] = $to = date('Y-m-d H:i:s', strtotime('today'));
+                $time['from'] = $from = date('Y-m-d H:i:s', strtotime($to . '-1 days'));
+                return $time;
+                break;
+
+            case $day === 'third':
+                $d = date('Y-m-d H:i:s', strtotime('today'));
+                $time['to'] = $to = date('Y-m-d H:i:s', strtotime($d . '-1 days'));
+                $time['from'] = $from = date('Y-m-d H:i:s', strtotime($to . '-1 days'));
+                return $time;
+                break;
+
+        }
+
+        return $time;
+    }
+
+
+    public static function getInfo(){
+        return [
+            'calldate' => 'Дата и время вызова',
+            'src' => 'Идентификатор вызывающего абонента',
+            'dst' => 'Пункт назначения вызова',
+            'userfield' => 'Статусы',
+            'uniqueid' => 'Уникальный идентификатор канала',
+            'disposition' => 'Состояние обработки вызова',
+        ];
+    }
+
+
 
 }

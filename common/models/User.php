@@ -135,8 +135,6 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             ['status', 'default', 'value' => self::STATUS_INACTIVE],
-            [['username'], 'required', 'message' => 'Заполните поле Имя пользователя'],
-            [['password_hash'], 'required', 'message' => 'Введите пароль'],
             [['username', 'email'], 'unique', 'message' => 'Something went wrong!'],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_DELETED]],
             [['token'], 'string', 'max' => 512],

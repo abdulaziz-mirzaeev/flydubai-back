@@ -101,7 +101,7 @@ class CashierController extends BaseController
     {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashierFrom', 'cashier'])->where(['status' => Process::TYPE_TRANSFER, 'status_director' => 1]),
+            'query' => Process::find()->with(['cashierFrom', 'cashier'])->where(['process_type' => Process::TYPE_TRANSFER, 'status_director' => 1]),
             'pagination' => false,
         ]);
 
@@ -114,12 +114,19 @@ class CashierController extends BaseController
     {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashier'])->where(['status' => Process::TYPE_ENTER, 'status_director' => 1]),
+            'query' => Process::find()
+                ->with(['cashier'])
+                ->where([
+                    'process_type' => Process::TYPE_EXIT,
+                    'status_director' => Process::DIRECTOR_CONFIRM_TRUE,
+                    'status' => 0,
+                ]),
             'pagination' => false,
         ]);
 
         return $provider;
     }
+
 
     // список подтвержденных Директором приходов в кассу
 
@@ -247,7 +254,8 @@ class CashierController extends BaseController
 
             if ( $process->save() ) {
                 $message = 'Произведен расход средств из кассы ' . $cashier->name . ' на сумму ' . $process->summ;
-                Notification::send(Notification::CONFIRM_EXIT, $process->id, Notification::STATUS_PROCESS, $message); // отправляем уведомление
+                $user_id = User::findOne(['role' => 'director'])->id;
+                Notification::send(Notification::CONFIRM_EXIT, $process->id, Notification::STATUS_PROCESS, $message, $user_id); // отправляем уведомление
                 return ['message' => 'Success'];
             }
 
@@ -331,7 +339,7 @@ class CashierController extends BaseController
             }
 
             // для исключения повторного снятия одной и той же суммы, проверка, пока не будет подтверждено директором
-            if ( $process = Process::find()->where(['summ' => $post['summ'], 'cashier_id' => $post['cashier_id'], 'cashier_from' => $post['cashier_from'], 'process_type' => Process::TYPE_TRANSFER, 'status' => 0])->one() ) {
+            if ( $process = Process::find()->where(['summ' => $post['summ'], 'cashier_id' => $post['cashier_id'], 'cashier_from' => $post['cashier_from'], 'process_type' => Process::TYPE_TRANSFER, 'status_director' => 0, 'status' => 0])->one() ) {
                 Yii::$app->response->statusCode = 422;
                 return ['errors' => 'Процесс уже создан, его необходимо подтвердить директором!'];
             }
@@ -438,12 +446,14 @@ class CashierController extends BaseController
             // вернуть из той же кассы, в которую поступили средства
 
             if ( $cashier->summ - $post['summ'] < 0 ) {
-                return ['status' => 0, 'errors' => 'Расход превышает остаток в кассе!'];
+                Yii::$app->response->setStatusCode(422);
+                return ['errors' => 'Расход превышает остаток в кассе!'];
             }
 
             // для исключения повторного снятия одной и той же суммы, проверка, пока не будет подтверждено директором
             if ( $process = Process::find()->where(['summ' => $post['summ'], 'cashier_id' => $post['cashier_id'], 'process_type' => Process::TYPE_RETURNED, 'status' => 0])->one() ) {
-                return ['status' => 0, 'errors' => 'Процесс уже создан, его необходимо подтвердить директором!'];
+                Yii::$app->response->setStatusCode(422);
+                return ['errors' => 'Процесс уже создан, его необходимо подтвердить директором!'];
             }
 
             // расход из кассы
@@ -458,7 +468,8 @@ class CashierController extends BaseController
 
             if ( $order->save() && $cashier->save() && $process->save() ) {
                 $message = 'Произведен возврат средств из кассы ' . $cashier->name . ' на сумму ' . $process->summ;
-                Notification::send(Notification::CONFIRM_RETURN, $process->id, Notification::STATUS_PROCESS, $message);
+                $user_id = User::findOne(['role' => 'director']);
+                Notification::send(Notification::CONFIRM_RETURN, $process->id, Notification::STATUS_PROCESS, $message, $user_id);
                 return ['status' => 1];
             }
 
@@ -529,17 +540,16 @@ class CashierController extends BaseController
     // GET запрос id - process_id
     public function actionConfirmexit($id)
     {
-
         $user = User::findOne(Yii::$app->user->id);
         if ( !in_array($user->role, ['director', 'accounter', 'admin']) ) { // доверенные для подтверждения вывода средств пользователи
             Yii::$app->response->statusCode = 403;
-            return ['status' => 0, 'errors' => 'Доступ запрещен!'];
+            return ['errors' => 'Доступ запрещен!'];
         }
 
         if ( !$id > 0 ) $errors[] = 'Не задан процесс (process_id)!';
         if ( !$process = Process::find()->with(['cashier'])->where(['id' => $id])->one() ) $errors[] = 'Процесс не найден!';
 
-        if ( $process && $process->status_director == 1 ) $errors[] = 'Вывод средств уже подтвержден!';
+        if ( $process && $process->status_director == 1 ) $errors[] = 'Процесс уже подтвержден!';
 
         if ( !$errors ) {
 
@@ -550,10 +560,12 @@ class CashierController extends BaseController
                 // отключаем предыдущее уведомление
                 Notification::complete($process->id);
 
-                $message = 'Подтвержден вывод средств из кассы ' . $process->cashier->name . ' на сумму ' . $process->summ;
+                $processType = Process::processType[$process->process_type];
+                $message = 'Подтвержден ' . $processType . ' из кассы ' . $process->cashier->name . ' на сумму ' . $process->summ;
+                $user_id = $process->created_by;
 
-                Notification::send(Notification::CONFIRMED, $process->id, Notification::STATUS_PROCESS, $message); // отправляем новое уведомление
-                return ['status' => 1];
+                Notification::send(Notification::CONFIRMED, $process->id, Notification::STATUS_PROCESS, $message, $user_id); // отправляем новое уведомление
+                return ['message' => $message];
             }
 
             if ( $process->hasErrors() ) $errors[] = $process->getErrors();

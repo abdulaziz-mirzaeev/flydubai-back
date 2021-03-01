@@ -32,6 +32,8 @@ use Yii;
  * @property int|null $modified_by Изменил
  * @property int|null $count Количество
  *
+ * @property string $receiptdata Количество
+ *
  * @property Cashier $cashier
  * @property Client $client
  * @property Currency $currency0
@@ -176,7 +178,7 @@ class Order extends \backend\models\BaseModel
     // связанные данные  ?expand=order,operator
     public function extraFields()
     {
-        return ['order', 'operator', 'processes', 'receipt', 'terminal', 'service'];
+        return ['order', 'operator', 'processes', 'receipt', 'terminal', 'service', 'receiptdata'];
     }
 
     /*public function beforeDelete()
@@ -261,9 +263,9 @@ class Order extends \backend\models\BaseModel
         return $this->hasOne(Operator::className(), ['id' => 'operator_id']);
     }
 
-    public function getReceiptData()
+    public function getReceiptdata()
     {
-        return Receipt::findOne(['order_id' => $this->id])->data;
+        return json_decode(Receipt::findOne(['order_id' => $this->id])->data);
     }
 
 

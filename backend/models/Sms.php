@@ -121,7 +121,7 @@ class Sms extends \backend\models\BaseModel
 
         $result = Curl::runex(self::$url,$header,'POST',$data);
 
-        d($result,1);
+        //d($result,0);
 
         return $result; // " test    Request is received " .  $data);
         

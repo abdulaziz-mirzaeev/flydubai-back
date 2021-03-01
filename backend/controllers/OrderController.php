@@ -275,5 +275,10 @@ class OrderController extends BaseController
         return $order->getErrors();
     }
 
+    public function actionReceiptdata($id)
+    {
+        return json_decode(Order::findOne($id)->receiptdata);
+    }
+
 
 }

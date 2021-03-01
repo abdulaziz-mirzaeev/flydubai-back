@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use backend\models\Cdr;
 use backend\models\Client;
 use backend\models\Globals;
 use backend\models\Order;
@@ -22,7 +23,8 @@ class GlobalsController extends Controller
             'paymentTypes' => Process::paymentType,
             'processTypes' => Process::processType,
             'clientTypes' => Client::clientTypes,
-            'orderTypes' => Order::order_types
+            'orderTypes' => Order::order_types,
+            'statusCallCenter' => Cdr::status_callcenter
         ];
 
         return $globals;

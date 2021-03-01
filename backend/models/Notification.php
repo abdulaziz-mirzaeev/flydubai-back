@@ -52,15 +52,16 @@ class Notification extends \backend\models\BaseModel
     ];
 
     // отправка уведомлений
-    public static function send($type=Notification::NEW_MESSAGE, $process_id, $status=Notification::STATUS_PROCESS, $message=null, $user_id=null){
+    public static function send($type = Notification::NEW_MESSAGE, $process_id, $status = Notification::STATUS_PROCESS, $message = null, $user_id = null)
+    {
 
         $notification = new Notification();
         $notification->process_id = $process_id;
         $notification->type = $type;
         $notification->message = $message;
         $notification->user_id = $user_id;
-        $notification->status = $status ; // обработан
-        if($notification->save()){
+        $notification->status = $status; // обработан
+        if ( $notification->save() ) {
             return true;
         }
         //d($notification->getErrors(),1);
@@ -69,11 +70,12 @@ class Notification extends \backend\models\BaseModel
     }
 
     // прочитать сообщение
-    public static function read($id){
+    public static function read($id)
+    {
 
-        if($notification = Notification::findOne($id)){
+        if ( $notification = Notification::findOne($id) ) {
             $notification->status = Notification::STATUS_COMPLETE;
-            if($notification->save()) return true;
+            if ( $notification->save() ) return true;
         }
 
         return false;
@@ -81,11 +83,12 @@ class Notification extends \backend\models\BaseModel
     }
 
     // отключаем уведомление
-    public static  function complete($process_id){
+    public static function complete($process_id)
+    {
 
-        if( $notification = Notification::find()->where(['process_id'=>$process_id,'status'=>Notification::STATUS_PROCESS])->one() ){
+        if ( $notification = Notification::find()->where(['process_id' => $process_id, 'status' => Notification::STATUS_PROCESS])->one() ) {
             $notification->status = Notification::STATUS_COMPLETE;
-            if( $notification->save() ) return true;
+            if ( $notification->save() ) return true;
         }
         return false;
     }
@@ -104,7 +107,7 @@ class Notification extends \backend\models\BaseModel
     public function rules()
     {
         return [
-            [['user_id', 'type', 'status', 'created_by', 'modified_by','process_id'], 'integer'],
+            [['user_id', 'type', 'status', 'created_by', 'modified_by', 'process_id'], 'integer'],
             [['created_at', 'modified_at'], 'safe'],
             [['message'], 'string', 'max' => 512],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
