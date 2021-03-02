@@ -76,6 +76,18 @@ class ProcessController extends BaseController
         return $provider;
     }
 
+    // список расхода средств из кассы
+    public function actionReturn()
+    {
+
+        $provider = new ActiveDataProvider([
+            'query' => Process::find()->where(['process_type' => Process::TYPE_RETURNED]),
+            'pagination' => false,
+        ]);
+
+        return $provider;
+    }
+
     public function actionUnconfirmed()
     {
 

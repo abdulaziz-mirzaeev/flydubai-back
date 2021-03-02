@@ -36,6 +36,7 @@ class UserController extends BaseController
             $post = Yii::$app->request->post();
             $user->username = $post['username'];
             $user->email = $post['email'];
+            $user->role = $post['role'];
             if ($user->save()) {
                 return ['status' => 1];
             }

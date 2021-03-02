@@ -134,7 +134,7 @@ class CashierController extends BaseController
     {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashier'])->where(['status' => Process::TYPE_RETURNED, 'status_director' => 1]),
+            'query' => Process::find()->with(['cashier'])->where(['process_type' => Process::TYPE_RETURNED, 'status_director' => 1]),
             'pagination' => false,
         ]);
 
@@ -437,6 +437,14 @@ class CashierController extends BaseController
         if ( !$cashier = Cashier::findOne($post['cashier_id']) ) $errors[] = 'Касса не найдена!';
         if ( !$order = Order::findOne($post['order_id']) ) $errors[] = 'Не найден заказ!';
 
+        if ( Process::findOne([
+            'order_id' => $post['order_id'],
+            'process_type' => Process::TYPE_RETURNED
+        ])
+        ) {
+            $errors[] = 'Процесс уже создан на эту заявку';
+        }
+
         //if(!$process = Process::find()->where( ['order_id'=>$post['order_id'],'process_type'=>Process::TYPE_ENTER] )->one()) $errors[] = 'Процесс не найден!';
 
         if ( !$errors ) {
@@ -478,7 +486,8 @@ class CashierController extends BaseController
             if ( $process->hasErrors() ) $errors[] = $process->getErrors();
         }
 
-        return ['status' => 0, 'errors' => $errors];
+        Yii::$app->response->setStatusCode(422);
+        return $errors;
 
     }
 

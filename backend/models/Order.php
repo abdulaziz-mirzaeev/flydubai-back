@@ -33,6 +33,7 @@ use Yii;
  * @property int|null $count Количество
  *
  * @property string $receiptdata Количество
+ * @property bool $hasReturn ВДС?
  *
  * @property Cashier $cashier
  * @property Client $client
@@ -165,6 +166,7 @@ class Order extends \backend\models\BaseModel
             'summ_terminal' => 'Сумма с карты',
             'nds' => 'НДС',
             'status' => 'Статус',
+            'hasReturn' => 'Обработан?',
             'cheque_number' => 'Номер чека',
             'payment_type' => 'Способ оплаты',
             'created_at' => 'Дата создания',
@@ -178,7 +180,7 @@ class Order extends \backend\models\BaseModel
     // связанные данные  ?expand=order,operator
     public function extraFields()
     {
-        return ['order', 'operator', 'processes', 'receipt', 'terminal', 'service', 'receiptdata'];
+        return ['order', 'operator', 'processes', 'receipt', 'terminal', 'service', 'receiptdata', 'hasReturn'];
     }
 
     /*public function beforeDelete()
@@ -277,5 +279,20 @@ class Order extends \backend\models\BaseModel
      {
          return new OrderQuery(get_called_class());
      } */
+
+
+    /**
+     * Identifies whether the Returned order was processed by cashier
+     * @return bool hasReturn
+     */
+    public function getHasReturn(): bool
+    {
+        return Process::find()
+            ->where([
+                'order_id' => $this->id,
+                'process_type' => Process::TYPE_RETURNED
+            ])
+            ->exists();
+    }
 
 }
