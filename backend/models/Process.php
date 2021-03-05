@@ -42,20 +42,22 @@ class Process extends \backend\models\BaseModel
     // тип оплаты
     const PAYMENT_TYPE_CASH = 'CASH';  // НАЛИЧНЫЕ
     const PAYMENT_TYPE_TERMINAL = 'TERMINAL'; // ТЕРМИНАЛ (БЕЗНАЛИЧНЫЙ)
+    const PAYMENT_TYPE_TERMINAL_HUMO = 'TERMINAL_HUMO'; // ТЕРМИНАЛ (HUMO)
     const PAYMENT_TYPE_VALUTE = 'VALUTE'; // ВАЛЮТА
     const PAYMENT_TYPE_TRANSFER = 'TRANSFER'; // ПЕРЕЧИСЛЕНИЕ (БЕЗНАЛИЧНЫЙ)
     const PAYMENT_TYPE_CASH_TERMINAL = 'CASH_TERMINAL'; // смешанный, наличные и терминал
 
     const DIRECTOR_CONFIRM_TRUE = 1;
     const DIRECTOR_CONFIRM_FALSE = 0;
-    public const paymentType = [
+     const paymentType = [
         self::PAYMENT_TYPE_CASH => 'НАЛИЧНЫЕ',
         self::PAYMENT_TYPE_TERMINAL => 'ТЕРМИНАЛ',
+        self::PAYMENT_TYPE_TERMINAL_HUMO => 'ТЕРМИНАЛ HUMO',
         self::PAYMENT_TYPE_VALUTE => 'ВАЛЮТА',
         self::PAYMENT_TYPE_TRANSFER => 'ПЕРЕЧИСЛЕНИЕ',
         self::PAYMENT_TYPE_CASH_TERMINAL => 'СМЕШАННЫЙ (НАЛИЧНЫЕ И ТЕРМИНАЛ)'
     ];
-    public const processType = [
+     const processType = [
         self::TYPE_ENTER => 'ПРИХОД',
         self::TYPE_EXIT => 'РАСХОД',
         self::TYPE_TRANSFER => 'ПЕРЕМЕЩЕНИЕ',

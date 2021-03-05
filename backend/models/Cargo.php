@@ -44,6 +44,22 @@ class Cargo extends \backend\models\BaseModel
         return 'cargo';
     }
 
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        if ( $insert ) {
+            $order = new Order();
+            $order->type = 'cargo';
+            $order->type_id = $this->id;
+            $order->status = Order::STATUS_BOOKED;
+            $order->save();
+
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * {@inheritdoc}
      */

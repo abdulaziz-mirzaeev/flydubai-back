@@ -26,6 +26,7 @@ class OrderController extends BaseController
         $provider = new ActiveDataProvider([
             'query' => Order::find()
                 ->where('type!=""')
+                ->andWhere('type!="cargo"')
                 ->andWhere('type_id!=""'),
             'pagination' => false,
         ]);
@@ -83,7 +84,7 @@ class OrderController extends BaseController
 
     }
 
-    //
+    // оплата
     public function actionPay()
     {
 
@@ -124,6 +125,7 @@ class OrderController extends BaseController
                 }
                 break;
             case Process::PAYMENT_TYPE_TERMINAL:
+            case Process::PAYMENT_TYPE_TERMINAL_HUMO:
                 if ( empty($post['summ_terminal']) ) {
                     $errors['summ_terminal'] = 'Сумма терминала не введена!';
                 }
@@ -144,6 +146,7 @@ class OrderController extends BaseController
                     $errors['cheque_number'] = 'Номер квитанции не введена!';
                 }
                 break;
+
             default:
                 $errors['payment_type'] = 'Такой способ оплаты не существует';
         }
@@ -181,6 +184,7 @@ class OrderController extends BaseController
             if ( !array_key_exists('errors', $receipt) ) {
                 switch ( $post['payment_type'] ) {
                     case Process::PAYMENT_TYPE_CASH:
+                    case Process::PAYMENT_TYPE_TERMINAL_HUMO:
                         // Cash Payment
                         $order->summ = $post['summ'];
 
@@ -217,6 +221,10 @@ class OrderController extends BaseController
                         $process->cheque_number = $post['cheque_number'];
                         break;
                 }
+
+
+
+
 
                 if ( $cashier->save() && $process->save() && $order->save() ) {
                     $message = 'Поступили средства в кассы ' . $cashier->name . ' на сумму ' . $process->summ;
@@ -266,6 +274,10 @@ class OrderController extends BaseController
             return ['message' => 'Заявка не существует'];
         }
 
+        if ( $order->status === Order::STATUS_RETURNED ) {
+            return ['message' => 'Заявка уже имеет статус "ВДС"'];
+        }
+
         $order->status = Order::STATUS_RETURNED;
 
         if ( $order->save() ) {
@@ -278,6 +290,17 @@ class OrderController extends BaseController
     public function actionReceiptdata($id)
     {
         return json_decode(Order::findOne($id)->receiptdata);
+    }
+
+    public function actionCargo()
+    {
+        $provider = new ActiveDataProvider([
+            'query' => Order::find()
+                ->where(['type' => 'cargo']),
+            'pagination' => false,
+        ]);
+
+        return $provider;
     }
 
 

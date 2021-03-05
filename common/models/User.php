@@ -3,6 +3,7 @@
 namespace common\models;
 
 use backend\controllers\BaseController;
+use backend\models\Operator;
 use Yii;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
@@ -26,12 +27,30 @@ use yii\web\IdentityInterface;
  * @property string $number
  * @property string $password write-only password
  * @property string $role
+ * @property string $isOperator
  */
 class User extends ActiveRecord implements IdentityInterface
 {
     const STATUS_DELETED = 0;
     const STATUS_INACTIVE = 9;
     const STATUS_ACTIVE = 10;
+
+    const ROLE_ADMIN = 'admin';
+    const ROLE_DIRECTOR = 'director';
+    const ROLE_OPERATOR = 'operator';
+    const ROLE_CASHIER = 'cashier';
+    const ROLE_ACCOUNTER = 'accounter';
+    const ROLE_OPERATOR_CARGO = 'operator_cargo';
+
+    const roles = [
+        self::ROLE_ADMIN => 'Администратор',
+        self::ROLE_DIRECTOR => 'Директор',
+        self::ROLE_OPERATOR => 'Оператор',
+        self::ROLE_CASHIER => 'Кассир',
+        self::ROLE_ACCOUNTER => 'Бухгалтер',
+        self::ROLE_OPERATOR_CARGO => 'Оператор Карго'
+    ];
+
 
     /**
      * {@inheritdoc}
@@ -216,5 +235,19 @@ class User extends ActiveRecord implements IdentityInterface
     public function removePasswordResetToken()
     {
         $this->password_reset_token = null;
+    }
+
+    /**
+     * Checks if the given user is in the list of operators
+     * @return bool
+     */
+    public function getIsOperator(): bool
+    {
+        return Operator::find()->where(['user_id' => $this->id])->exists();
+    }
+
+    public function extraFields()
+    {
+        return ['isOperator'];
     }
 }

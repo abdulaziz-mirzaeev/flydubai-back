@@ -82,6 +82,7 @@ class CdrController extends BaseController
 
     public function actionUpdate()
     {
+
         $request = Yii::$app->request;
         $uniqueid = $request->post('uniqueid');
         $status = $request->post('status');
@@ -92,7 +93,9 @@ class CdrController extends BaseController
             $cdr->save(false);
             return $cdr;
         }
+
         return [];
+
     }
 
 

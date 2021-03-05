@@ -61,6 +61,12 @@ class Client extends \backend\models\BaseModel
             [['created_at', 'modified_at'], 'safe'],
             [['first_name', 'patronym', 'last_name'], 'string', 'max' => 255],
             [['passport_serial', 'passport_number', 'first_name', 'last_name'], 'required'],
+            [
+                'passport_serial',
+                'unique',
+                'targetAttribute' => ['passport_serial', 'passport_number'],
+                'message' => 'Клиент с такими данными паспорта уже существует'
+            ],
             [['client_number'], 'string', 'max' => 32],
             [['passport_serial'], 'string', 'max' => 16],
             [['email'], 'email'],
@@ -159,11 +165,11 @@ class Client extends \backend\models\BaseModel
 
     public function getName()
     {
-        if (empty($this->first_name) || empty($this->last_name)) {
+        if ( empty($this->first_name) || empty($this->last_name) ) {
             return null;
         }
 
-        if ($this->_name === null) {
+        if ( $this->_name === null ) {
             $this->setName($this->first_name, $this->last_name);
         }
 

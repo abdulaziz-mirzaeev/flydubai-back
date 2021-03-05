@@ -77,7 +77,7 @@ class Sms extends \backend\models\BaseModel
 
 
         $auth_token = self::getToken();
-        //d($phone .' ' . $auth_token . ' ' . $message_id . ' ' . $message);
+        //d($phone .' ' . $auth_token . ' ' . $message_id . ' ' . $message,0);
 
         $data = '{
  "messages":
@@ -105,13 +105,7 @@ class Sms extends \backend\models\BaseModel
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS =>'{
- "messages":
- [{"recipient":"998903285426",
-  "message-id":"flyDubai",
-  "sms":{
-  "originator": "3700",
-  "content": {"text": "hello"}}}]}',
+            CURLOPT_POSTFIELDS =>$data,
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
                 'Authorization: Basic Zmx5ZHViYWl1ejpNNVU1c3k4Vmk5'

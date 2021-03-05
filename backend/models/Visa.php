@@ -42,6 +42,22 @@ class Visa extends \backend\models\BaseModel
         return 'visa';
     }
 
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        if ( $insert ) {
+            $order = new Order();
+            $order->type = 'visa';
+            $order->type_id = $this->id;
+            $order->status = Order::STATUS_BOOKED;
+            $order->save();
+
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * {@inheritdoc}
      */

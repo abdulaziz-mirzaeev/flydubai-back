@@ -4,9 +4,9 @@ namespace backend\controllers;
 
 use backend\models\Cdr;
 use backend\models\Client;
-use backend\models\Globals;
 use backend\models\Order;
 use backend\models\Process;
+use common\models\User;
 use yii\rest\Controller;
 
 header('Access-Control-Allow-Origin: *');
@@ -24,7 +24,8 @@ class GlobalsController extends Controller
             'processTypes' => Process::processType,
             'clientTypes' => Client::clientTypes,
             'orderTypes' => Order::order_types,
-            'statusCallCenter' => Cdr::status_callcenter
+            'statusCallCenter' => Cdr::status_callcenter,
+            'roles' => User::roles
         ];
 
         return $globals;

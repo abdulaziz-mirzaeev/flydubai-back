@@ -134,7 +134,7 @@ class CashierController extends BaseController
     {
 
         $provider = new ActiveDataProvider([
-            'query' => Process::find()->with(['cashier'])->where(['process_type' => Process::TYPE_RETURNED, 'status_director' => 1]),
+            'query' => Process::find()->with(['cashier'])->where(['process_type' => Process::TYPE_RETURNED, 'status_director' => 1, 'status' => 0]),
             'pagination' => false,
         ]);
 

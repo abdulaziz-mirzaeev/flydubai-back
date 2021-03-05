@@ -40,6 +40,22 @@ class TourPackage extends \backend\models\BaseModel
         return 'tour_package';
     }
 
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        if ( $insert ) {
+            $order = new Order();
+            $order->type = 'tour_package';
+            $order->type_id = $this->id;
+            $order->status = Order::STATUS_BOOKED;
+            $order->save();
+
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -47,13 +63,14 @@ class TourPackage extends \backend\models\BaseModel
     {
         return [
             [['tour_operator_id', 'tour_id', 'tour_partner_id', 'client_id', 'created_by', 'modified_by'], 'integer'],
+            [['tour_id', 'tour_operator_id', 'tour_partner_id', 'cost_price', 'sell_price'], 'required'],
             [['cost_price', 'sell_price'], 'number'],
             [['comment'], 'string'],
             [['created_at', 'modified_at', 'payment_at'], 'safe'],
-            [['client_id'], 'exist', 'skipOnError' => true, 'targetClass' => Client::className(), 'targetAttribute' => ['client_id' => 'id']],
-            [['tour_id'], 'exist', 'skipOnError' => true, 'targetClass' => Tour::className(), 'targetAttribute' => ['tour_id' => 'id']],
-            [['tour_operator_id'], 'exist', 'skipOnError' => true, 'targetClass' => TourOperator::className(), 'targetAttribute' => ['tour_operator_id' => 'id']],
-            [['tour_partner_id'], 'exist', 'skipOnError' => true, 'targetClass' => TourPartner::className(), 'targetAttribute' => ['tour_partner_id' => 'id']],
+            [['client_id'], 'exist', 'targetClass' => Client::className(), 'targetAttribute' => ['client_id' => 'id']],
+            [['tour_id'], 'exist', 'targetClass' => Tour::className(), 'targetAttribute' => ['tour_id' => 'id']],
+            [['tour_operator_id'], 'exist', 'targetClass' => TourOperator::className(), 'targetAttribute' => ['tour_operator_id' => 'id']],
+            [['tour_partner_id'], 'exist', 'targetClass' => TourPartner::className(), 'targetAttribute' => ['tour_partner_id' => 'id']],
             [['sell_price'], PriceValidator::class]
         ];
     }
