@@ -90,21 +90,40 @@ class SmsController extends BaseController
     public function actionChecksms()
     {
         $tomorrow = new DateTime('tomorrow');
+        $template = 'Dear $CLIENT, we are pleased to inform you that your departure is on $TIME to $ROUTE';
 
         $flights = Ticket::find()
             ->select([
                 'flight_route',
-                'DATE(flight_date) as flight_date',
-                'client.first_name',
-                'client.last_name',
+                'flight_date',
+                'client.first_name as client_name',
+                'client.last_name as client_surname',
+                'client.phone as phone',
                 'client.send_newsletter'
             ])
             ->joinWith('client', false, 'LEFT JOIN')
             ->where([
                 'client.send_newsletter' => 1,
-                'flight_date' => $tomorrow
+                'DATE(flight_date)' => $tomorrow->format('Y-m-d')
             ])
-            ->asArray()->all();
+            ->asArray()
+            ->all();
+
+        foreach ( $flights as $flight ) {
+            $details = [
+                '$CLIENT' => $flight['client_name'] . ' ' . $flight['client_surname'],
+                '$TIME' => date('d.m.Y H:i', strtotime($flight['flight_date'])),
+                '$ROUTE' => $flight['flight_route']
+            ];
+            $phone = Sms::correctPhone($flight['phone']);
+            $message = strtr($template, $details);
+
+            $sms = new Sms();
+            $sms->phone = $phone;
+            $sms->message = $message;
+
+            $sms->save();
+        }
 
 
         return print_r($flights);

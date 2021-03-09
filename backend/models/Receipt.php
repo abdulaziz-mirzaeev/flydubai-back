@@ -157,7 +157,7 @@ class Receipt extends \backend\models\BaseModel
                 "terminalSN" => $terminal->terminalSN, // "N5W00000000000",
                 "totalCard" => $total_card, // Оплачено с банковской карты
                 "totalCash" => $total_cash, // Оплачено наличными
-                "totalCost" => $order->summ,  // Общая стоимость, с учетом скидки
+                "totalCost" => $order->summ, // $order->summ,  // Общая стоимость, с учетом скидки
                 //"totalDiscount" => 0,
                 //"totalLoyaltyCard" => 0,
                 "totalNds" => $order->nds, // ндс
@@ -169,14 +169,14 @@ class Receipt extends \backend\models\BaseModel
                 "receiptDetails" => [
                     [
                         "qty" => $order->count, // колво товара
-                        "amount" => $order->order->cost_price * $order->count, // сумма за все  цена * qty
+                        "amount" =>  $order->count, // сумма за все  цена * qty
                         // "discount" => 0,
                         // "discountPercent" => 0,
                         // "excise" => 0,
                         // "exciseRate" => 0,
                         //"nds" => $or['nds'],
                         //"ndsPercent" => 0,
-                        "price" => $order->summ, // оплачено
+                        "price" => $order->summ, //$order->summ, // оплачено
                         "productId" => $order->type_id,
                         "productName" => $order->type,
                         "status" => strtoupper($status), // "PAID", "RETURNED"
@@ -262,6 +262,8 @@ class Receipt extends \backend\models\BaseModel
     private static function createReceipt($token, $data)
     {
         $result = Curl::run('/api/receipt/send', 'post', $token, $data);
+
+        //d($result,1);
 
         if ( isset($result['statusCode']) && $result['statusCode'] == 200 ) {
             return $result['data']; // uid

@@ -58,8 +58,8 @@ class Curl extends CurlBase
         ));
 
         $result = curl_exec($curl);
-
-        //d(curl_error($curl));
+        //d($result);
+        //d(curl_error($curl),1);
 
         curl_close($curl);
 

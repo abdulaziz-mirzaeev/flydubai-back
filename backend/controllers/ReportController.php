@@ -22,13 +22,14 @@ class ReportController extends BaseController
     public function actionSales()
     {
 
+        $date_from = Yii::$app->request->get('Filter')['date_from'];
         $date_to = Yii::$app->request->get('Filter')['date_to'];
 
         if (!$date_to) $date_to = date('Y-m-d', time());
 
         if ($date_to) {
             // дата заказа-заявки
-            $date_in = date('Y-m-d', strtotime(Yii::$app->request->get('Filter')['date_from']));
+            $date_in = date('Y-m-d', strtotime($date_from));
             $date_to = date('Y-m-d', strtotime($date_to . ' + 1 day'));
         }
 

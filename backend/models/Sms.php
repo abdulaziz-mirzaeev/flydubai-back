@@ -45,6 +45,7 @@ class Sms extends \backend\models\BaseModel
         return [
             [['created_at'], 'safe'],
             [['created_by','status'], 'integer'],
+            [['message', 'phone'], 'required'],
             [['message', 'error', 'phone'], 'string', 'max' => 255],
         ];
     }
