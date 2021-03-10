@@ -37,9 +37,11 @@ use Yii;
  *
  * @property Cashier $cashier
  * @property Client $client
+ * @property Receipt $receipt
  * @property Currency $currency0
  * @property Process[] $processes
  * @property Ticket|Visa|TourPackage|Cargo $order
+ * @property int | string $profit
  */
 class Order extends \backend\models\BaseModel
 {
@@ -180,7 +182,7 @@ class Order extends \backend\models\BaseModel
     // связанные данные  ?expand=order,operator
     public function extraFields()
     {
-        return ['order', 'operator', 'processes', 'receipt', 'terminal', 'service', 'receiptdata', 'hasReturn'];
+        return ['order', 'operator', 'processes', 'receipt', 'terminal', 'service', 'hasReturn', 'profit'];
     }
 
     /*public function beforeDelete()
@@ -259,15 +261,25 @@ class Order extends \backend\models\BaseModel
         return $this->hasOne($model, ['id' => 'type_id']);
     }
 
+
     // оператор
     public function getOperator()
     {
         return $this->hasOne(Operator::className(), ['id' => 'operator_id']);
     }
 
-    public function getReceiptdata()
+
+
+    public function getProfit()
     {
-        return json_decode(Receipt::findOne(['order_id' => $this->id])->data);
+        $costPrice = $this->order->cost_price;
+        $sellPrice = $this->order->sell_price;
+
+        if ( $costPrice && $sellPrice ) {
+            return $sellPrice - $costPrice;
+        }
+
+        return 'N/A';
     }
 
 

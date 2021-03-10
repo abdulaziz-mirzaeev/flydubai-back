@@ -3,6 +3,7 @@
 namespace backend\controllers;
 
 use backend\models\Receipt;
+use backend\models\Uzcassa;
 use Yii;
 use backend\models\Cashier;
 use backend\models\Notification;
@@ -293,7 +294,17 @@ class OrderController extends BaseController
 
     public function actionReceiptdata($id)
     {
-        return json_decode(Order::findOne($id)->receiptdata);
+        $order = Order::findOne($id);
+
+        $receipt = $order->receipt;
+        if ( empty($receipt->data) ) {
+            if ( $data = Receipt::getReceipt($receipt->uid, Uzcassa::getToken()) ) {
+                $receipt->data = $data;
+                $receipt->save();
+            }
+        }
+
+        return json_decode($receipt->data);
     }
 
     public function actionCargo()

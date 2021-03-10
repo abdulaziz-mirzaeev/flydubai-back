@@ -272,18 +272,31 @@ class Receipt extends \backend\models\BaseModel
 
     }
 
-    private static function getReceipt($condition, $token = null, $asJson = false)
+    /**
+     * modified by Abdulaziz Mirzaev
+     * Date: 10.03.2021
+     * previous code:
+     *
+         $result = Curl::run('/api/receipt/list?' . $condition, 'get', $token);
+
+            if ( isset($result['total']) && $result['total'] > 0 ) {
+                $result = $result['items'][0];
+                if ( $asJson ) $result = json_encode($result, JSON_UNESCAPED_UNICODE);
+                return $result;
+            }
+         return false;
+     */
+
+    public static function getReceipt($condition, $token = null, $asJson = false)
     {
 
-        $result = Curl::run('/api/receipt/list?' . $condition, 'get', $token);
+        $result = Curl::run('/api/receipt/' . $condition, 'get', $token);
 
-        if ( isset($result['total']) && $result['total'] > 0 ) {
-            $result = $result['items'][0];
+        if ( isset($result['id']) ) {
             if ( $asJson ) $result = json_encode($result, JSON_UNESCAPED_UNICODE);
             return $result;
         }
         return false;
-
     }
 
     /**
