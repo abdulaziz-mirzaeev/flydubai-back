@@ -126,8 +126,10 @@ class Order extends \backend\models\BaseModel
         if ( parent::beforeSave($insert) ) {
 
             if ( $this->isNewRecord ) {
-                $operator_id = Operator::findOne(['user_id' => Yii::$app->user->identity->id])->id;
-                $this->operator_id = $operator_id;
+                $operator = Operator::findOne(['user_id' => Yii::$app->user->identity->id]);
+                if ( $operator ) {
+                    $this->operator_id = $operator->id;
+                }
             }
 
             return true;
@@ -267,7 +269,6 @@ class Order extends \backend\models\BaseModel
     {
         return $this->hasOne(Operator::className(), ['id' => 'operator_id']);
     }
-
 
 
     public function getProfit()
