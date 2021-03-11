@@ -124,6 +124,11 @@ class Order extends \backend\models\BaseModel
     public function beforeSave($insert)
     {
         if ( parent::beforeSave($insert) ) {
+            /**
+             * This is new for March 11, 2021
+             * modified by Abdulaziz Mirzaev
+             * created at 11 March 2021
+             */
 
             if ( $this->isNewRecord ) {
                 $operator = Operator::findOne(['user_id' => Yii::$app->user->identity->id]);
