@@ -41,6 +41,7 @@ class User extends ActiveRecord implements IdentityInterface
     const ROLE_CASHIER = 'cashier';
     const ROLE_ACCOUNTER = 'accounter';
     const ROLE_OPERATOR_CARGO = 'operator_cargo';
+    const ROLE_VISA_SUPERVISOR = 'visaSupervisor';
 
     const roles = [
         self::ROLE_ADMIN => 'Администратор',
@@ -48,7 +49,8 @@ class User extends ActiveRecord implements IdentityInterface
         self::ROLE_OPERATOR => 'Оператор',
         self::ROLE_CASHIER => 'Кассир',
         self::ROLE_ACCOUNTER => 'Бухгалтер',
-        self::ROLE_OPERATOR_CARGO => 'Оператор Карго'
+        self::ROLE_OPERATOR_CARGO => 'Оператор Карго',
+        self::ROLE_VISA_SUPERVISOR => 'Супервайзер виз'
     ];
 
 
