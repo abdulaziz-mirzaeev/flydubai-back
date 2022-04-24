@@ -38,10 +38,12 @@ use Yii;
  * @property Cashier $cashier
  * @property Client $client
  * @property Receipt $receipt
+ * @property Terminal $terminal
  * @property Currency $currency0
  * @property Process[] $processes
  * @property Ticket|Visa|TourPackage|Cargo $order
  * @property int | string $profit
+ * @property int | string $cash
  */
 class Order extends \backend\models\BaseModel
 {
@@ -311,6 +313,11 @@ class Order extends \backend\models\BaseModel
                 'process_type' => Process::TYPE_RETURNED
             ])
             ->exists();
+    }
+
+    public function getCash()
+    {
+        return $this->summ - $this->summ_terminal;
     }
 
 }

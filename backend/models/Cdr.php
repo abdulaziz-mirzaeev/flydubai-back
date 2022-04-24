@@ -125,12 +125,6 @@ class Cdr extends \backend\models\BaseModel
     /**
      * @param $number
      * @return mixed
-     *
-     *
-     *
-     * •
-     * •
-     * •
      */
 
     public static function getCallerId($number)
@@ -177,7 +171,7 @@ class Cdr extends \backend\models\BaseModel
         $incomings = self::getBySql($incomingSql);
 
         if ($callerId)
-            $outgoings = self::getBySql($outgoingSql)->all();
+            $outgoings = self::getBySql($outgoingSql);
 
         if (!$outgoings)
             $outgoings = [];
@@ -323,6 +317,7 @@ class Cdr extends \backend\models\BaseModel
                 continue;
 
             $temp = self::getCountStatus($from, $to, $user->number);
+
             if (!$temp)
                 continue;
 
@@ -332,7 +327,6 @@ class Cdr extends \backend\models\BaseModel
 
         return $return;
     }
-
 
     public static function getStatuses()
     {
@@ -374,7 +368,6 @@ class Cdr extends \backend\models\BaseModel
         return $time;
     }
 
-
     public static function getInfo(){
         return [
             'calldate' => 'Дата и время вызова',
@@ -385,7 +378,5 @@ class Cdr extends \backend\models\BaseModel
             'disposition' => 'Состояние обработки вызова',
         ];
     }
-
-
 
 }

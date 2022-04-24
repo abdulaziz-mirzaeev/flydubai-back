@@ -15,6 +15,8 @@ use Yii;
  * @property string|null $patronym Отчество
  * @property int|null $client_type_id Тип клиента
  * @property string|null $client_number Номер клиента
+ * @property string|null $company Компания
+ * @property string|null $inn ИНН
  * @property string|null $passport_serial Серия паспорта
  * @property string|null $passport_number Номер паспорта
  * @property string|null $created_at Дата создания
@@ -58,6 +60,7 @@ class Client extends \backend\models\BaseModel
     {
         return [
             [['client_type_id', 'created_by', 'modified_by', 'passport_number'], 'integer'],
+            ['client_type_id', 'default', 'value' => 1],
             [['created_at', 'modified_at'], 'safe'],
             [['first_name', 'patronym', 'last_name'], 'string', 'max' => 255],
             [['passport_serial', 'passport_number', 'first_name', 'last_name'], 'required'],
@@ -86,6 +89,8 @@ class Client extends \backend\models\BaseModel
             'patronym' => 'Отчество',
             'last_name' => 'Фамилия',
             'email' => 'Э-почта',
+            'company' => 'Компания',
+            'inn' => 'ИНН',
             'phone' => 'Номер телефона',
             'client_type_id' => 'Тип клиента',
             'client_number' => 'Номер клиента',

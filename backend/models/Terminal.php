@@ -18,6 +18,7 @@ use Yii;
  * @property string|null $modified_at Дата изменения
  * @property int|null $created_by Создал
  * @property int|null $modified_by Изменил
+ * @property string $typeName Изменил
  *
  * @property Receipt[] $receipts
  */
@@ -43,7 +44,7 @@ class Terminal extends \backend\models\BaseModel
         return [
             [['branch_id', 'company_id', 'created_by', 'modified_by'], 'integer'],
             [['created_at', 'modified_at'], 'safe'],
-            [['terminalID','terminalSN', 'terminalModel'], 'string', 'max' => 24],
+            [['terminalID', 'terminalSN', 'terminalModel'], 'string', 'max' => 24],
         ];
     }
 
@@ -66,6 +67,11 @@ class Terminal extends \backend\models\BaseModel
         ];
     }
 
+    public function extraFields()
+    {
+        return ['typeName'];
+    }
+
     /**
      * Gets query for [[Receipts]].
      *
@@ -74,5 +80,19 @@ class Terminal extends \backend\models\BaseModel
     public function getReceipts()
     {
         return $this->hasMany(Receipt::className(), ['terminal_id' => 'id']);
+    }
+
+    public function isInternal()
+    {
+        return $this->terminalID === 0;
+    }
+
+    public function getTypeName()
+    {
+        if ( $this->terminalID == 0 ) {
+            return '(Внутренний)';
+        }
+
+        return '(UzCassa)';
     }
 }

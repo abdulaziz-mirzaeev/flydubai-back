@@ -15,7 +15,6 @@ use Yii;
  * @property string|null $created_at
  * @property int|null $created_by
  *
- * @property Call[] $calls
  * @property User $user
  * @property Order[] $orders
  */
@@ -62,18 +61,7 @@ class Operator extends \backend\models\BaseModel
     // связанные данные  ?expand=order,operator
     public function extraFields()
     {
-        return ['user','orders','calls'];
-    }
-
-
-    /**
-     * Gets query for [[Calls]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getCalls()
-    {
-        return $this->hasMany(Call::className(), ['operator_id' => 'id']);
+        return ['user','orders'];
     }
 
     /**

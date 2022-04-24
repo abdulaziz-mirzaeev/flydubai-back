@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\models;
+namespace console\models;
 
 use app\traits\BaseModelTrait;
 use common\helpers\Curl;
@@ -17,9 +17,9 @@ use Yii;
  * @property string|null $created_at Дата создания
  * @property int|null $created_by Создал
  */
-class Sms extends \backend\models\BaseModel
+class Sms extends \yii\db\ActiveRecord
 {
-    use BaseModelTrait;
+
 
     //private static $auth_token = 'c2liZXh1ejpWdmF6NkRwem4';
     private static $username = 'flydubaiuz';

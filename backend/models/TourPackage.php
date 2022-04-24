@@ -10,7 +10,7 @@ use Yii;
  * This is the model class for table "tour_package".
  *
  * @property int $id
- * @property int|null $tour_operator_id Тур оператор
+ * @property int|null $operator_id Тур оператор
  * @property int|null $tour_id Тур
  * @property int|null $tour_partner_id Партнер по турпакетам
  * @property int|null $client_id Клиент
@@ -62,14 +62,14 @@ class TourPackage extends \backend\models\BaseModel
     public function rules()
     {
         return [
-            [['tour_operator_id', 'tour_id', 'tour_partner_id', 'client_id', 'created_by', 'modified_by'], 'integer'],
-            [['tour_id', 'tour_operator_id', 'tour_partner_id', 'cost_price', 'sell_price'], 'required'],
+            [['operator_id', 'tour_id', 'tour_partner_id', 'client_id', 'created_by', 'modified_by'], 'integer'],
+            [['tour_id', 'tour_partner_id', 'cost_price', 'sell_price'], 'required'],
             [['cost_price', 'sell_price'], 'number'],
             [['comment'], 'string'],
-            [['created_at', 'modified_at', 'payment_at'], 'safe'],
+            [['departure_date', 'return_date'], 'required'],
+            [['created_at', 'modified_at', 'payment_at', 'departure_date', 'return_date'], 'safe'],
             [['client_id'], 'exist', 'targetClass' => Client::className(), 'targetAttribute' => ['client_id' => 'id']],
             [['tour_id'], 'exist', 'targetClass' => Tour::className(), 'targetAttribute' => ['tour_id' => 'id']],
-            [['tour_operator_id'], 'exist', 'targetClass' => TourOperator::className(), 'targetAttribute' => ['tour_operator_id' => 'id']],
             [['tour_partner_id'], 'exist', 'targetClass' => TourPartner::className(), 'targetAttribute' => ['tour_partner_id' => 'id']],
             [['sell_price'], PriceValidator::class]
         ];
@@ -82,7 +82,7 @@ class TourPackage extends \backend\models\BaseModel
     {
         return [
             'id' => 'ID',
-            'tour_operator_id' => 'Тур оператор',
+            'operator_id' => 'Оператор',
             'tour_id' => 'Тур',
             'tour_partner_id' => 'Партнер по турпакетам',
             'client_id' => 'Клиент',
@@ -90,6 +90,8 @@ class TourPackage extends \backend\models\BaseModel
             'sell_price' => 'Цена Реализации',
             'comment' => 'Комментарии',
             'payment_at' => 'Дата оплаты',
+            'departure_date' => 'Дата выезда',
+            'return_date' => 'Дата возвращения',
             'created_at' => 'Дата создания',
             'modified_at' => 'Дата изменения',
             'created_by' => 'Создал',
@@ -99,7 +101,7 @@ class TourPackage extends \backend\models\BaseModel
 
     public function extraFields()
     {
-        return ['client', 'order', 'tour', 'tourPartner', 'tourOperator'];
+        return ['client', 'order', 'tour', 'tourPartner'];
     }
 
     /**
@@ -122,15 +124,6 @@ class TourPackage extends \backend\models\BaseModel
         return $this->hasOne(Tour::className(), ['id' => 'tour_id']);
     }
 
-    /**
-     * Gets query for [[TourOperator]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getTourOperator()
-    {
-        return $this->hasOne(TourOperator::className(), ['id' => 'tour_operator_id']);
-    }
 
     /**
      * Gets query for [[TourPartner]].

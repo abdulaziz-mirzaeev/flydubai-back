@@ -26,8 +26,6 @@ class CdrController extends BaseController
     }
 
 
-
-
     // get extention's missed calls
     public function actionGetMissedCalls()
     {
@@ -38,21 +36,23 @@ class CdrController extends BaseController
 
         $user = User::findIdentityByAccessToken($token);
 
-        if ($user)
+        if ($user) {
             $number = Operator::findOne(['user_id' => $user->id]);
+        }
 
-        if ($number)
+        if ($number) {
             $exten = $number->number;
+        }
 
         $time = Cdr::getDateTime('first');
 
-        $from = ArrayHelper::getValue($time, 'from');
+        $from = ArrayHelper::getValue($time, 'date_from');
 
-        $to = ArrayHelper::getValue($time, 'to');
+        $to = ArrayHelper::getValue($time, 'date_to');
 
-       // $missedCalls = Cdr::getMissedCallsByExt($from, $to, $exten);
+        // $missedCalls = Cdr::getMissedCallsByExt($from, $to, $exten);
 
-        $missedCalls = Cdr::getMissedCallsByExt('2021-02-28', '2021-03-01', $exten);
+        $missedCalls = Cdr::getMissedCallsByExt($from, $to, $exten);
 
         return $missedCalls;
 
@@ -70,9 +70,9 @@ class CdrController extends BaseController
 
             $to = date('Y-m-d H:i:s', strtotime('today'));
 
-            $from = date('Y-m-d H:i:s', strtotime($to . '+1 days'));
+            $from = date('Y-m-d H:i:s', strtotime($to . '-1000 days'));
 
-            $missedCalls = Cdr::getStats($to, $from);
+            $missedCalls = Cdr::getStats($from, $to);
 
         } else
             $missedCalls = Cdr::getStats($to, $from);
@@ -88,7 +88,7 @@ class CdrController extends BaseController
         $status = $request->post('status');
         $cdr = Cdr::findOne(['uniqueid' => $uniqueid]);
 
-        if($cdr){
+        if ($cdr) {
             $cdr->userfield = $status;
             $cdr->save(false);
             return $cdr;
@@ -108,17 +108,17 @@ class CdrController extends BaseController
     // call_center logic that we are not using in flydubai
     public function actionGetMissedCallsCallCenter()
     {
+
         $user_id = Yii::$app->user->id;
 
         $user = User::findOne(['id' => $user_id]);
+        if ($user) {
+            $missedCalls = Cdr::check($user->number);
 
-        $missedCalls = Cdr::check($user->number);
-
-        return $missedCalls;
+            return $missedCalls;
+        }
+        return [];
     }
-
-
-
 
 
 }

@@ -53,6 +53,7 @@ class Ticket extends \backend\models\BaseModel
     public function afterSave($insert, $changedAttributes)
     {
         parent::afterSave($insert, $changedAttributes);
+
         if ( $insert ) {
             $order = new Order();
             $order->type = 'ticket';
@@ -82,13 +83,13 @@ class Ticket extends \backend\models\BaseModel
         return [
             [['flight_number', 'flight_route', 'cost_price', 'sell_price', 'tariff_id', 'pnr', 'passenger_count', 'flight_date'], 'required'],
             [['cost_price', 'sell_price'], 'number'],
-            [['tariff_id', 'parent_id', 'client_id', 'passenger_count', 'created_by', 'modified_by'], 'integer'],
+            [['tariff_id', 'parent_id', 'passenger_count', 'created_by', 'modified_by'], 'integer'],
             [['comment'], 'string'],
             [['flight_date', 'payment_at', 'created_at', 'modified_at'], 'safe'],
             [['flight_number'], 'string', 'max' => 32],
             [['flight_route', 'tariff_type'], 'string', 'max' => 255],
             [['pnr'], 'string', 'max' => 24],
-            [['client_id'], 'exist', 'skipOnError' => true, 'targetClass' => Client::className(), 'targetAttribute' => ['client_id' => 'id']],
+            // [['client_id'], 'exist', 'skipOnError' => true, 'targetClass' => Client::className(), 'targetAttribute' => ['client_id' => 'id']],
             [['tariff_id'], 'exist', 'skipOnError' => true, 'targetClass' => Tariff::className(), 'targetAttribute' => ['tariff_id' => 'id']],
             [['sell_price'], PriceValidator::class]
         ];
@@ -110,7 +111,7 @@ class Ticket extends \backend\models\BaseModel
             'tariff_id' => 'Класс Бронирования',
             'tariff_type' => 'Тип тарифа',
             'pnr' => 'PNR',
-            'client_id' => 'Клиент',
+            // 'client_id' => 'Клиент',
             'passenger_count' => 'Количество пассажиров',
             'comment' => 'Комментарии',
             'flight_date' => 'Дата вылета',
@@ -124,7 +125,7 @@ class Ticket extends \backend\models\BaseModel
 
     public function extraFields()
     {
-        return ['client', 'order', 'child', 'parent', 'commission'];
+        return ['client', 'order', 'child', 'parent', 'commission', 'clients'];
     }
 
     /**
@@ -134,7 +135,7 @@ class Ticket extends \backend\models\BaseModel
      */
     public function getClient()
     {
-        return $this->hasOne(Client::className(), ['id' => 'client_id']);
+        //  return $this->hasOne(Client::className(), ['id' => 'client_id']);
     }
 
     /**
@@ -175,6 +176,12 @@ class Ticket extends \backend\models\BaseModel
     public function getChild()
     {
         return $this->hasOne(Ticket::class, ['parent_id' => 'id']);
+    }
+
+    // получение всех пассажиров для билета
+    public function getClients()
+    {
+        return $this->hasMany(Client::class, ['id' => 'client_id'])->viaTable('ticket_client', ['ticket_id' => 'id']);
     }
 
     public function getCommission()

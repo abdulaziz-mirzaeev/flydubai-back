@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use backend\models\Cashier;
 use backend\models\Cdr;
 use backend\models\Client;
 use backend\models\Order;
@@ -18,16 +19,15 @@ class GlobalsController extends Controller
 {
     public function actionIndex()
     {
-        $globals = [
+        return [
             'orderStatuses' => Order::order_statuses,
             'paymentTypes' => Process::paymentType,
             'processTypes' => Process::processType,
             'clientTypes' => Client::clientTypes,
             'orderTypes' => Order::order_types,
+            'cashierTypes' => Cashier::cashier_types,
             'statusCallCenter' => Cdr::status_callcenter,
             'roles' => User::roles
         ];
-
-        return $globals;
     }
 }

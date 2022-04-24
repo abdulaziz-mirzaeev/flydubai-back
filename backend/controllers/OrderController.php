@@ -115,8 +115,6 @@ class OrderController extends BaseController
 
         if ( empty($post['payment_type']) ) $errors['payment_type'] = 'Способ оплаты на введена!';
 
-        if ( empty($post['nds']) ) $errors['nds'] = 'НДС не введен';
-
         if ( empty($post['terminal_id']) ) $errors['terminal_id'] = 'Терминал (ККМ) не выбран!';
 
         switch ( $post['payment_type'] ) {
@@ -219,17 +217,38 @@ class OrderController extends BaseController
 
             if ( $cashier->save() && $process->save() && $order->save() ) {
                 // создаем чек
-                $receipt = Receipt::create([
-                    'terminal_id' => $post['terminal_id'],
-                    'order_id' => $order->id,
-                    'status' => Order::STATUS_PAID,
-                ]);
+                if ( !$cashier->isBlack() && !$order->terminal->isInternal() ) {
+                    $receipt = Receipt::create([
+                        'terminal_id' => $post['terminal_id'],
+                        'order_id' => $order->id,
+                        'status' => Order::STATUS_PAID,
+                    ]);
+                } else { // Внутренний кассовый аппарат
+                    $receipt = new Receipt();
+                    $data = [
+                        'uid' => $order->id . ' ' . $order->type_id,
+                        'total_cost' => $order->summ,
+                        'total_terminal' => $order->summ_terminal,
+                        'total_cash' => $order->cash,
+                        'receiptDetails' => [
+                            "productId" => $order->type_id,
+                            "productName" => $order->type,
+                        ],
+                        'receiptDateTime' => date('Y-m-d H:i:s')
+                    ];
+                    $receipt->data = json_encode($data);
+                    $receipt->save(false);
+
+                    $order->status = Order::STATUS_PAID;
+                }
 
                 if ( array_key_exists('errors', $receipt) ) {
                     $errors[] = $receipt['errors'];
                     $cashier->load($cashier->getOldAttributes());
                     $order->load($order->getOldAttributes());
                     $process->delete();
+                    $cashier->save();
+                    $order->save();
                     return $errors;
                 }
 

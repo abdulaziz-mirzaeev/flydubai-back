@@ -27,13 +27,15 @@ class TourpackageController extends BaseController
 
     public function actionCreate()
     {
+
         $post = $this->getPost();
+
         $errors = [];
 
         $tourPackage = new TourPackage();
         $tourPackage->attributes = $post['tour_package'];
 
-        if ( $post['clientExists'] === true ) {
+        if ( $post['clientExists'] ) {
             $client_id = $post['client_id'];
             $client = Client::findOne(['id' => $client_id]);
             if ( empty($client) ) {
@@ -48,7 +50,6 @@ class TourpackageController extends BaseController
         if ( empty($errors) ) {
             if ( $tourPackage->validate() && $client->validate() ) {
                 $client->save();
-
                 $tourPackage->client_id = $client->id;
                 $tourPackage->save();
 
